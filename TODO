@@ -1,0 +1,9 @@
+# Files =======================================================================
+
+main.cpp; Line 148 >? Search a way to do in parallel
+
+README > Improve README with better explanation, cases of uses, etc.
+
+# General =====================================================================
+
+Create the CUDA Version of MCMC_C (in main_cuda.cpp)
