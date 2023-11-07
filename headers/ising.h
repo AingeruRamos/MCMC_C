@@ -28,7 +28,7 @@
 class SpinGlassIterationResult: public IterationResult {
     public:
         double _energy;
-        double _average_spin;
+        int _average_spin;
 
         /**
          * @name SpinGlassIterationResult
@@ -90,7 +90,7 @@ class SpinGlass: public Replica {
         static int _kernel_cross[];
         static int _kernel_semicross[];
 
-        int* _sample;
+        char* _sample;
 
         double _last_delta;
         
@@ -140,7 +140,7 @@ class SpinGlass: public Replica {
  * @brief
  * * Return 1 if index is inside the matrix, else 0
 */
-int is_index_in_matrix(int* mat, int n_row, int n_col, int row, int col);
+int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col);
 
 /**
  * @name single_convolve
@@ -157,38 +157,10 @@ int is_index_in_matrix(int* mat, int n_row, int n_col, int row, int col);
  * The kernel size is assumed to be (kernel_size x kernel_size). 
  * Those values that, when applying the kernel, are outside the matrix, it will assumed the value 0 
 */
-int single_convolve(int* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
+int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
 
-/**
- * @name convolve
- * @param mat Matrix to use
- * @param n_row Number of rows of the matrix
- * @param n_col Number og collumns of the matrix
- * @param kernel Kernel of the convolution
- * @param kernel_size Size of the kernel
- * @return The matrix result of the convolution
- * @brief
- * * Calculates the convolution of the matrix
- * @note
- * The kernel size is assumed to be (kernel_size x kernel_size)
- * Those values that, when applying the kernel, are outside the matrix, it will assumed the value 0
-*/
-int* convolve(int* mat, int n_row, int n_col, int* kernel, int kernel_size);
+double calc_energy(char* sample);
 
-/**
- * @name array_sum
- * @param arr Array to use
- * @param length Size of the array
- * @return Sum of all elements of the array
- * @brief
- * * Calculates the sum of the array
-*/
-int array_sum(int* arr, int length);
-
-/**
- * @name array_sum
- * @overload
-*/
-double array_sum(double* arr, int length);
+int calc_average_spin(char* sample);
 
 #endif

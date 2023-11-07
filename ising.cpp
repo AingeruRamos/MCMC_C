@@ -48,7 +48,7 @@ void SpinGlassResult::print() {
     printf("\n");
     for(int i=0; i<_n_iterations; i++) {
         SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) _iteration_list[i];
-        printf("%f,", sp_it->_average_spin);
+        printf("%d,", sp_it->_average_spin);
     }
     printf("\n");
 }
@@ -61,7 +61,7 @@ int SpinGlass::_kernel_semicross[] = {0, 0, 0, 0, 0, 1, 0, 1, 0};
 void SpinGlass::init() {
 
     // Initialize sample
-    _sample = (int*) malloc(N_ROW*N_COL*sizeof(int));
+    _sample = (char*) malloc(N_ROW*N_COL*sizeof(char));
 
     for(int i=0; i<(N_ROW*N_COL); i++) {
         if(rand_uniform() <= SPIN_PLUS_PERCENTAGE) { _sample[i] = 1; }
@@ -75,12 +75,10 @@ void SpinGlass::init() {
     SpinGlassIterationResult* sp_it = new SpinGlassIterationResult(0.0, 0.0);
 
     /// Calculate initial energy
-    int* aux_energy = convolve(_sample, N_ROW, N_COL, SpinGlass::_kernel_semicross, 3); //* ISING MODEL!!!
-    sp_it->_energy = array_sum(aux_energy, N_ROW*N_COL);
-    free(aux_energy);
+    sp_it->_energy = calc_energy(_sample); //* ISING MODEL!!!
 
     /// Calculate initial average spin
-    sp_it->_average_spin = array_sum(_sample, N_ROW*N_COL);
+    sp_it->_average_spin = calc_average_spin(_sample);
 
     _results->push(sp_it);
 }
@@ -100,7 +98,7 @@ double SpinGlass::eval() {
 double SpinGlass::delta(void* trial) {
     int* trial_int = (int*) trial;
     int index = trial_int[0]*N_ROW+trial_int[1];
-    int sum = single_convolve(_sample, N_ROW, N_COL, index, SpinGlass::_kernel_cross, 3); 
+    int sum = apply_kernel(_sample, N_ROW, N_COL, index, SpinGlass::_kernel_cross, 3); 
     int si = _sample[trial_int[0]*N_ROW+trial_int[1]];
     _last_delta = 2.0*si*sum;
     return _last_delta;
@@ -120,21 +118,21 @@ void SpinGlass::save(void* trial) {
         sp_it->_energy += _last_delta;
     }
 
-    sp_it->_average_spin = array_sum(_sample, N_ROW*N_COL);
+    sp_it->_average_spin = calc_average_spin(_sample);
 
     _results->push(sp_it);
 }
 
 //
 
-int is_index_in_matrix(int* mat, int n_row, int n_col, int row, int col) {
+int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col) {
     if((row >= 0) && (row < n_row) && (col >= 0) && (col < n_col)) {
         return 1;
     }
     return 0;
 }
 
-int single_convolve(int* mat, int n_row, int n_col, int index, int* kernel, int kernel_size) {
+int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size) {
     int sum=0;
 
     int center_row = (int) index/n_row;
@@ -162,26 +160,18 @@ int single_convolve(int* mat, int n_row, int n_col, int index, int* kernel, int 
     return sum;
 }
 
-int* convolve(int* mat, int n_row, int n_col, int* kernel, int kernle_size) {
-    int* result = (int*) malloc(n_row*n_col*sizeof(int));
-    for(int index=0; index<n_row*n_col; index++) {
-        result[index] = single_convolve(mat, n_row, n_col, index, kernel, kernle_size);
-    }
-    return result;
-}
-
-int array_sum(int* arr, int length) {
-    int sum = 0;
-    for(int i=0; i<length; i++) {
-        sum += arr[i];
+double calc_energy(char* sample) {
+    double sum = 0;
+    for(int index=0; index<(N_ROW*N_COL); index++) {
+        sum += (double) apply_kernel(sample, N_ROW, N_COL, index, SpinGlass::_kernel_semicross, 3);
     }
     return sum;
 }
 
-double array_sum(double* arr, int length) {
+int calc_average_spin(char* sample) {
     int sum = 0;
-    for(int i=0; i<length; i++) {
-        sum += arr[i];
+    for(int index=0; index<(N_ROW*N_COL); index++) {
+        sum += (int) sample[index];
     }
     return sum;
 }
