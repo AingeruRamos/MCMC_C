@@ -90,10 +90,6 @@ class SpinGlass: public Replica {
         static int _kernel_cross[];
         static int _kernel_semicross[];
 
-        int _n_row;
-        int _n_col;
-        double _spin_plus_percentage;
-
         int* _sample;
 
         double _last_delta;

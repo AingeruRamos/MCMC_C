@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "./headers/constants.h"
 #include "./headers/tools.h"
 
 // SPIN_GLASS_ITERATION_RESULT DEFS.
@@ -58,17 +59,12 @@ int SpinGlass::_kernel_cross[] = {0, 1, 0, 1, 0, 1, 0, 1, 0};
 int SpinGlass::_kernel_semicross[] = {0, 0, 0, 0, 0, 1, 0, 1, 0};
 
 void SpinGlass::init(int n_row, int n_col, double spin_plus_percentage) {
-    // Set model constants
-    _n_row = n_row;
-    _n_col = n_col;
-    _spin_plus_percentage = spin_plus_percentage;
 
     // Initialize sample
-    int n = n_row*n_col;
-    _sample = (int*) malloc(n*sizeof(int));
+    _sample = (int*) malloc(N_ROW*N_COL*sizeof(int));
 
-    for(int i=0; i<n; i++) {
-        if(rand_uniform() <= _spin_plus_percentage) { _sample[i] = 1; }
+    for(int i=0; i<(N_ROW*N_COL); i++) {
+        if(rand_uniform() <= SPIN_PLUS_PERCENTAGE) { _sample[i] = 1; }
         else { _sample[i] = -1; }
     }
 
@@ -79,20 +75,20 @@ void SpinGlass::init(int n_row, int n_col, double spin_plus_percentage) {
     SpinGlassIterationResult* sp_it = new SpinGlassIterationResult(0.0, 0.0);
 
     /// Calculate initial energy
-    int* aux_energy = convolve(_sample, _n_row, _n_col, SpinGlass::_kernel_semicross, 3); //* ISING MODEL!!!
-    sp_it->_energy = array_sum(aux_energy, _n_row*_n_col);
+    int* aux_energy = convolve(_sample, N_ROW, N_COL, SpinGlass::_kernel_semicross, 3); //* ISING MODEL!!!
+    sp_it->_energy = array_sum(aux_energy, N_ROW*N_COL);
     free(aux_energy);
 
     /// Calculate initial average spin
-    sp_it->_average_spin = array_sum(_sample, _n_row*_n_col);
+    sp_it->_average_spin = array_sum(_sample, N_ROW*N_COL);
 
     _results->push(sp_it);
 }
 
 void* SpinGlass::trial() {
     int* arr = (int*) malloc(2*sizeof(int));
-    arr[0] = (int) (rand_uniform()*_n_row);
-    arr[1] = (int) (rand_uniform()*_n_col);
+    arr[0] = (int) (rand_uniform()*N_ROW);
+    arr[1] = (int) (rand_uniform()*N_COL);
     return arr;
 }
 
@@ -103,16 +99,16 @@ double SpinGlass::eval() {
 
 double SpinGlass::delta(void* trial) {
     int* trial_int = (int*) trial;
-    int index = trial_int[0]*_n_row+trial_int[1];
-    int sum = single_convolve(_sample, _n_row, _n_col, index, SpinGlass::_kernel_cross, 3); 
-    int si = _sample[trial_int[0]*_n_row+trial_int[1]];
+    int index = trial_int[0]*N_ROW+trial_int[1];
+    int sum = single_convolve(_sample, N_ROW, N_COL, index, SpinGlass::_kernel_cross, 3); 
+    int si = _sample[trial_int[0]*N_ROW+trial_int[1]];
     _last_delta = 2.0*si*sum;
     return _last_delta;
 }
 
 void SpinGlass::move(void* trial) {
     int* trial_int = (int*) trial;
-    int index = trial_int[0]*_n_row+trial_int[1];
+    int index = trial_int[0]*N_ROW+trial_int[1];
     _sample[index] *= -1;
 }
 
@@ -124,7 +120,7 @@ void SpinGlass::save(void* trial) {
         sp_it->_energy += _last_delta;
     }
 
-    sp_it->_average_spin = array_sum(_sample, _n_row*_n_col);
+    sp_it->_average_spin = array_sum(_sample, N_ROW*N_COL);
 
     _results->push(sp_it);
 }

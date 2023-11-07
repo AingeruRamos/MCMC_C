@@ -23,6 +23,10 @@
 
 void option_enabeler(int argc, char** argv);
 
+int DEBUG_FLOW = 0;
+int DEBUG_RESULTS = 0;
+int N_THREADS = 1;
+
 int main(int argc, char** argv) {
 
     time_t begin_all = omp_get_wtime();
