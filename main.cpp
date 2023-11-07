@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
         results[replica_id] = new SpinGlassResult(N_ITERATIONS);
         sp->_results = results[replica_id];
 
-        sp->init(N_ROW, N_COL, SPIN_PLUS_PERCENTAGE);
+        sp->init();
         models[replica_id] = sp;
     }
 

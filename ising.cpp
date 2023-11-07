@@ -58,7 +58,7 @@ void SpinGlassResult::print() {
 int SpinGlass::_kernel_cross[] = {0, 1, 0, 1, 0, 1, 0, 1, 0};
 int SpinGlass::_kernel_semicross[] = {0, 0, 0, 0, 0, 1, 0, 1, 0};
 
-void SpinGlass::init(int n_row, int n_col, double spin_plus_percentage) {
+void SpinGlass::init() {
 
     // Initialize sample
     _sample = (int*) malloc(N_ROW*N_COL*sizeof(int));

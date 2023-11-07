@@ -102,7 +102,7 @@ class SpinGlass: public Replica {
          * @brief
          * * Initializes the SpinGlass
         */
-        void init(int n_row, int n_col, double spin_plus_percentage);
+        void init();
 
         /**
          * @memberof Replica
