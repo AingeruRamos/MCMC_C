@@ -57,7 +57,7 @@ void SpinGlass::init() {
     /// Calculate initial average spin
     sp_it->_average_spin = calc_average_spin(_sample);
 
-    _results->push(sp_it);
+    _results.push(sp_it);
 }
 
 void* SpinGlass::trial() {
@@ -68,7 +68,7 @@ void* SpinGlass::trial() {
 }
 
 double SpinGlass::eval() {
-    SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) _results->top();
+    SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) _results.top();
     return sp_it->_energy;
 }
 
@@ -88,7 +88,7 @@ void SpinGlass::move(void* trial) {
 }
 
 void SpinGlass::save(void* trial) {
-    SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results->top();
+    SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results.top();
     SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) sp_last_it->copy();
 
     if(trial != nullptr) { //* If trial has been accepted
@@ -97,7 +97,7 @@ void SpinGlass::save(void* trial) {
 
     sp_it->_average_spin = calc_average_spin(_sample);
 
-    _results->push(sp_it);
+    _results.push(sp_it);
 }
 
 //

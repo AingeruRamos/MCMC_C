@@ -45,7 +45,7 @@ class IterationResult {
 class Replica {
     public:
 
-        Stack<IterationResult*, N_ITERATIONS>* _results;
+        Stack<IterationResult*, N_ITERATIONS> _results;
 
         /**
          * @name trial
