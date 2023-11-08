@@ -21,6 +21,8 @@
 
 // SPIN_GLASS_ITERATION_RESULT DEFS.
 
+SpinGlassIterationResult::SpinGlassIterationResult() {}
+
 SpinGlassIterationResult::SpinGlassIterationResult(double energy, double average_spin) {
     _energy = energy;
     _average_spin = average_spin;
@@ -38,18 +40,16 @@ int SpinGlass::_kernel_semicross[] = {0, 0, 0, 0, 0, 1, 0, 1, 0};
 void SpinGlass::init() {
 
     // Initialize sample
-    _sample = (char*) malloc(N_ROW*N_COL*sizeof(char));
-
     for(int i=0; i<(N_ROW*N_COL); i++) {
         if(rand_uniform() <= SPIN_PLUS_PERCENTAGE) { _sample[i] = 1; }
         else { _sample[i] = -1; }
     }
 
     // Initialize ancillary variables
-    _last_delta = 0;
+    _last_delta = 0.0;
 
     // Calculate initial iteration
-    SpinGlassIterationResult* sp_it = new SpinGlassIterationResult(0.0, 0.0);
+    SpinGlassIterationResult* sp_it = new SpinGlassIterationResult();
 
     /// Calculate initial energy
     sp_it->_energy = calc_energy(_sample); //* ISING MODEL!!!

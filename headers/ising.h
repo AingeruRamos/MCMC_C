@@ -33,6 +33,12 @@ class SpinGlassIterationResult: public IterationResult {
         /**
          * @name SpinGlassIterationResult
          * @remark constructor
+        */
+        SpinGlassIterationResult();
+
+        /**
+         * @name SpinGlassIterationResult
+         * @remark constructor
          * @param energy Energy of the model
          * @param average_spin Average spin of the model
         */
@@ -62,7 +68,7 @@ class SpinGlass: public Replica {
         static int _kernel_cross[];
         static int _kernel_semicross[];
 
-        char* _sample;
+        char _sample[N_ROW*N_COL];
 
         double _last_delta;
         
