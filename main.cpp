@@ -41,14 +41,14 @@ int main(int argc, char** argv) {
     if(DEBUG_FLOW) { printf("Initialazing\n"); }
 
     Replica** models = (Replica**) malloc(TOTAL_REPLICAS*sizeof(Replica*));
-    Stack<IterationResult*, N_ITERATIONS>** results = (Stack<IterationResult*, N_ITERATIONS>**) 
+    Stack<IterationResult*, N_ITERATIONS>** model_results = (Stack<IterationResult*, N_ITERATIONS>**) 
                         malloc(TOTAL_REPLICAS*sizeof(Stack<IterationResult*, N_ITERATIONS>*));
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         SpinGlass* sp = new SpinGlass();
         
-        results[replica_id] = new Stack<IterationResult*, N_ITERATIONS>();
-        sp->_results = results[replica_id];
+        model_results[replica_id] = new Stack<IterationResult*, N_ITERATIONS>();
+        sp->_results = model_results[replica_id];
 
         sp->init();
         models[replica_id] = sp;
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
                                 malloc(TOTAL_REPLICAS*sizeof(Stack<IterationResult*, N_ITERATIONS>*));
     IterationResult* it_copy;
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        results_copy[replica_id] = results[replica_id]->copy();
+        results_copy[replica_id] = model_results[replica_id]->copy();
     }
 
     int* swap_replica_ids = (int*) malloc(TOTAL_REPLICAS*sizeof(int));
@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
             //? Search a way to do in parallel
             for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
                 int swap_replica_id = swap_replica_ids[replica_id];
-                results[replica_id]->set(results_copy[swap_replica_id]->get(iteration), iteration);
+                model_results[replica_id]->set(results_copy[swap_replica_id]->get(iteration), iteration);
             }
 
             #pragma omp barrier
@@ -245,7 +245,7 @@ int main(int argc, char** argv) {
     printf("#\n");
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        print_stack(results[replica_id]);
+        print_stack(model_results[replica_id]);
         printf("#\n");
     }
 
