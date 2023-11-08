@@ -14,6 +14,9 @@
 #ifndef _MCMC_H_
 #define _MCMC_H_
 
+#include "constants.h"
+#include "stack.h"
+
 /**
  * @class IterationResult
  * @brief
@@ -33,95 +36,7 @@ class IterationResult {
 };
 
 /**
- * @class ReplicaResult
- * @param _n_iterations Number of iterations
- * @param _act_iteration Actual iteration
- * @param _iteration_list List of iterations
- * @brief
- * * Instances of this class saves the data generated
- * * by multiple iterations of the MCMC algorithm
-*/
-class ReplicaResult {
-    public:
-        int _n_iterations;
-        int _act_iteration;
-        IterationResult** _iteration_list;
-
-        /**
-         * @name ReplicaResult
-         * @remark constructor
-         * @param n_iterations Number of iterations
-        */
-        ReplicaResult(int n_iterations);
-
-        /**
-         * @name push
-         * @param it_res IterationResult to add
-         * @brief
-         * * Adds a IterationResult to the list
-        */
-        void push(IterationResult* it_res);
-
-        /**
-         * @name set
-         * @param it_res IterationResult to add
-         * @param iteration Position where set 'it_res'
-         * @brief
-         * * Puts 'it_res' in index 'iteration'
-        */
-        void set(IterationResult* it_res, int iteration);
-
-        /**
-         * @name get
-         * @param iteration Index where get the IterationResult
-         * @return The IterationResult in position 'iteration'
-         * @brief
-         * * Gets the IterationResult in position 'iteration'
-        */
-        IterationResult* get(int iteration);
-
-        /**
-         * @name pop
-         * @return The last IterationResult of the list
-         * @brief
-         * * Gets the last IterationResult of the list
-         * @note
-         * This function doesnt eliminate tha last IterationResult.
-         * Just returns the pointer to it.
-        */
-        IterationResult* pop();
-
-        /**
-         * @name copy
-         * @remark virtual
-         * @return A copy of this ReplicaResult
-         * @brief
-         * * Copies this instance of ReplicaResult
-        */
-        virtual ReplicaResult* copy();
-
-        /**
-         * @name print
-         * @remark virtual
-         * @brief
-         * * Prints the list of results
-        */
-        virtual void print() = 0;
-
-        /**
-         * @name swap
-         * @remark static
-         * @param r1 A first ReplicaResult to swap
-         * @param r2 A second ReplicaResult to swap
-         * @param iteration Position to swap
-         * @brief
-         * * Swaps the position 'iteration' between the two ReplicaResult-s
-        */
-        static void swap(ReplicaResult* r1, ReplicaResult* r2, int iteration);
-};
-
-/**
- * @class ReplicaResult
+ * @class Replica
  * @param _results Pointer to ReplicaResult where save the results
  * @brief
  * * Instances of this class can represent any given model
@@ -130,7 +45,7 @@ class ReplicaResult {
 class Replica {
     public:
 
-        ReplicaResult* _results;
+        Stack<IterationResult*, N_ITERATIONS>* _results;
 
         /**
          * @name trial

@@ -30,29 +30,6 @@ IterationResult* SpinGlassIterationResult::copy() {
     return new SpinGlassIterationResult(_energy, _average_spin);
 }
 
-// SPIN_GLASS_RESULT DEFS.
-
-ReplicaResult* SpinGlassResult::copy() {
-    ReplicaResult* res_copy = new SpinGlassResult(_n_iterations);
-    for(int i=0; i<_n_iterations; i++) {
-        res_copy->push(_iteration_list[i]->copy());
-    }
-    return res_copy;
-}
-
-void SpinGlassResult::print() {
-    for(int i=0; i<_n_iterations; i++) {
-        SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) _iteration_list[i];
-        printf("%f,", sp_it->_energy);
-    }
-    printf("\n");
-    for(int i=0; i<_n_iterations; i++) {
-        SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) _iteration_list[i];
-        printf("%d,", sp_it->_average_spin);
-    }
-    printf("\n");
-}
-
 // SPIN_GLASS DEFS.
 
 int SpinGlass::_kernel_cross[] = {0, 1, 0, 1, 0, 1, 0, 1, 0};
@@ -91,7 +68,7 @@ void* SpinGlass::trial() {
 }
 
 double SpinGlass::eval() {
-    SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) _results->pop();
+    SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) _results->top();
     return sp_it->_energy;
 }
 
@@ -111,7 +88,7 @@ void SpinGlass::move(void* trial) {
 }
 
 void SpinGlass::save(void* trial) {
-    SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results->pop();
+    SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results->top();
     SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) sp_last_it->copy();
 
     if(trial != nullptr) { //* If trial has been accepted

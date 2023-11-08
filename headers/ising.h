@@ -45,34 +45,6 @@ class SpinGlassIterationResult: public IterationResult {
 };
 
 /**
- * @class SpinGlassResult
- * @extends ReplicaResult
- * @brief
- * * Instances of this class saves the data generated
- * * by multiple iterations of the MCMC in a SpinGlass
-*/
-class SpinGlassResult: public ReplicaResult {
-    public:
-        /**
-         * @remark constructor
-         * @note
-         * The constructor of this class MUST be the constructor 
-         * of the base class. In this case, ReplicaResult
-        */
-        using ReplicaResult::ReplicaResult;
-
-        /**
-         * @memberof ReplicaResult
-        */
-        virtual ReplicaResult* copy();
-
-        /**
-         * @memberof ReplicaResult
-        */
-        virtual void print();
-};
-
-/**
  * @class SpinGlass
  * @extends Replica
  * @param _kernel_cross (Static)

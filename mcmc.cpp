@@ -19,48 +19,6 @@
 #include "./headers/mcmc.h"
 #include "./headers/tools.h"
 
-// REPLICA_RESULT DEFS.
-
-ReplicaResult::ReplicaResult(int n_iterations) {
-    _n_iterations = n_iterations;
-    _act_iteration = 0;
-    _iteration_list = (IterationResult**) malloc(_n_iterations*sizeof(IterationResult*));
-}
-
-void ReplicaResult::push(IterationResult* it_res) {
-    _iteration_list[_act_iteration] = it_res;
-    _act_iteration++;
-}
-
-void ReplicaResult::set(IterationResult* it_res, int iteration) {
-    _iteration_list[iteration] = it_res;
-}
-
-void ReplicaResult::swap(ReplicaResult* r1, ReplicaResult* r2, int iteration) {
-    IterationResult* aux = r1->get(iteration);
-    r1->set(r2->get(iteration), iteration);
-    r2->set(aux, iteration);
-}
-
-IterationResult* ReplicaResult::get(int iteration) {
-    return _iteration_list[iteration];
-}
-
-IterationResult* ReplicaResult::pop() {
-    return _iteration_list[_act_iteration-1];
-}
-
-ReplicaResult* ReplicaResult::copy() {
-    ReplicaResult* res_copy = (ReplicaResult*) malloc(sizeof(ReplicaResult));
-    res_copy->_n_iterations = _n_iterations;
-    res_copy->_act_iteration = _act_iteration;
-    res_copy->_iteration_list = (IterationResult**) malloc(_n_iterations*sizeof(IterationResult*));
-    for(int i=0; i<_n_iterations; i++) {
-        res_copy->push(_iteration_list[i]->copy());
-    }
-    return res_copy;
-}
-
 // SWAP DEFS.
 
 Swap::Swap(int sw_cand_1, int sw_cand_2) {

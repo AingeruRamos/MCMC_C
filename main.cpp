@@ -20,8 +20,10 @@
 #include "./headers/ising.h"
 #include "./headers/mcmc.h"
 #include "./headers/tools.h"
+#include "./headers/stack.h"
 
 void option_enabeler(int argc, char** argv);
+void print_stack(Stack<IterationResult*, N_ITERATIONS>* stack);
 
 int DEBUG_FLOW = 0;
 int DEBUG_RESULTS = 0;
@@ -39,12 +41,13 @@ int main(int argc, char** argv) {
     if(DEBUG_FLOW) { printf("Initialazing\n"); }
 
     Replica** models = (Replica**) malloc(TOTAL_REPLICAS*sizeof(Replica*));
-    ReplicaResult** results = (ReplicaResult**) malloc(TOTAL_REPLICAS*sizeof(ReplicaResult*));
+    Stack<IterationResult*, N_ITERATIONS>** results = (Stack<IterationResult*, N_ITERATIONS>**) 
+                        malloc(TOTAL_REPLICAS*sizeof(Stack<IterationResult*, N_ITERATIONS>*));
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         SpinGlass* sp = new SpinGlass();
         
-        results[replica_id] = new SpinGlassResult(N_ITERATIONS);
+        results[replica_id] = new Stack<IterationResult*, N_ITERATIONS>();
         sp->_results = results[replica_id];
 
         sp->init();
@@ -145,7 +148,8 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Reordering\n"); }
 
-    ReplicaResult** results_copy = (ReplicaResult**) malloc(TOTAL_REPLICAS*sizeof(ReplicaResult*));
+    Stack<IterationResult*, N_ITERATIONS>** results_copy = (Stack<IterationResult*, N_ITERATIONS>**) 
+                                malloc(TOTAL_REPLICAS*sizeof(Stack<IterationResult*, N_ITERATIONS>*));
     IterationResult* it_copy;
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         results_copy[replica_id] = results[replica_id]->copy();
@@ -233,7 +237,7 @@ int main(int argc, char** argv) {
 
     if(DEBUG_RESULTS) {
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-            results_copy[replica_id]->print();
+            print_stack(results_copy[replica_id]);
             printf("#\n");
         }
     }
@@ -241,7 +245,7 @@ int main(int argc, char** argv) {
     printf("#\n");
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        results[replica_id]->print();
+        print_stack(results[replica_id]);
         printf("#\n");
     }
 
@@ -262,4 +266,17 @@ void option_enabeler(int argc, char** argv) {
             continue;
         } 
     }
+}
+
+void print_stack(Stack<IterationResult*, N_ITERATIONS>* stack) {
+    for(int i=0; i<N_ITERATIONS; i++) {
+        SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) stack->get(i);
+        printf("%f,", sp_it->_energy);
+    }
+    printf("\n");
+    for(int i=0; i<N_ITERATIONS; i++) {
+        SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) stack->get(i);
+        printf("%d,", sp_it->_average_spin);
+    }
+    printf("\n");
 }
