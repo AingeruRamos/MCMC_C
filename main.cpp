@@ -23,7 +23,7 @@
 #include "./headers/stack.h"
 
 void option_enabeler(int argc, char** argv);
-void print_stack(Stack<IterationResult*, N_ITERATIONS>* stack);
+void print_stack(Stack<SpinGlassIterationResult*, N_ITERATIONS>* stack);
 
 int DEBUG_FLOW = 0;
 int DEBUG_RESULTS = 0;
@@ -40,11 +40,10 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Initialazing\n"); }
 
-    Replica** models = (Replica**) malloc(TOTAL_REPLICAS*sizeof(Replica*));
+    SpinGlass* models = (SpinGlass*) malloc(TOTAL_REPLICAS*sizeof(SpinGlass));
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        SpinGlass* sp = new SpinGlass();
+        SpinGlass* sp = &models[replica_id];
         sp->init();
-        models[replica_id] = sp;
     }
 
     if(DEBUG_FLOW) { printf("Replicas: OK\n"); }
@@ -103,7 +102,7 @@ int main(int argc, char** argv) {
         for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
 
             for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-                MCMC_iteration(models[replica_id], temps[replica_id]);
+                MCMC_iteration<SpinGlass>(&models[replica_id], temps[replica_id]);
                 if(DEBUG_FLOW) { printf("Replica (%d): OK\n", replica_id); }
             }
 
@@ -115,9 +114,9 @@ int main(int argc, char** argv) {
             }
 
             if(SWAP_ACTIVE) {
-                for(int swap_index=tid; swap_index<n_swaps[iteration]; swap_index+=N_THREADS) {
-                    Swap* swap = swap_planning[iteration][swap_index];
-                    double swap_prob = get_swap_prob(swap, models, temps);
+                for(int swap_index=tid; swap_index<n_swaps[iteration-1]; swap_index+=N_THREADS) {
+                    Swap* swap = swap_planning[iteration-1][swap_index];
+                    double swap_prob = get_swap_prob<SpinGlass>(swap, models, temps);
 
                     if(DEBUG_FLOW) { printf("Swap pre-calculus (%d): OK\n", swap_index); }
 
@@ -141,10 +140,10 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Reordering\n"); }
 
-    Stack<IterationResult*, N_ITERATIONS>** results_copy = (Stack<IterationResult*, N_ITERATIONS>**)
-                            malloc(TOTAL_REPLICAS*sizeof(Stack<IterationResult*, N_ITERATIONS>*));
+    Stack<SpinGlassIterationResult*, N_ITERATIONS>** results_copy = (Stack<SpinGlassIterationResult*, N_ITERATIONS>**)
+                            malloc(TOTAL_REPLICAS*sizeof(Stack<SpinGlassIterationResult*, N_ITERATIONS>*));
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        results_copy[replica_id] = models[replica_id]->_results.copy();
+        results_copy[replica_id] = models[replica_id]._results.copy();
     }
 
     int* swap_replica_ids = (int*) malloc(TOTAL_REPLICAS*sizeof(int));
@@ -161,7 +160,7 @@ int main(int argc, char** argv) {
             //? Search a way to do in parallel
             for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
                 int swap_replica_id = swap_replica_ids[replica_id];
-                models[replica_id]->_results.set(results_copy[swap_replica_id]->get(iteration), iteration);
+                models[replica_id]._results.set(results_copy[swap_replica_id]->get(iteration), iteration);
             }
 
             #pragma omp barrier
@@ -237,7 +236,7 @@ int main(int argc, char** argv) {
     printf("#\n");
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        print_stack(&models[replica_id]->_results);
+        print_stack(&models[replica_id]._results);
         printf("#\n");
     }
 
@@ -260,7 +259,7 @@ void option_enabeler(int argc, char** argv) {
     }
 }
 
-void print_stack(Stack<IterationResult*, N_ITERATIONS>* stack) {
+void print_stack(Stack<SpinGlassIterationResult*, N_ITERATIONS>* stack) {
     for(int i=0; i<N_ITERATIONS; i++) {
         SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) stack->get(i);
         printf("%f,", sp_it->_energy);

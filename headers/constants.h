@@ -19,7 +19,7 @@
 #define SWAP_ACTIVE 1
 
 #define INIT_TEMP 0.1
-#define END_TEMP 0.2
+#define END_TEMP 0.3
 #define TEMP_STEP 0.1
 #define TOTAL_REPLICAS (int) (((END_TEMP-INIT_TEMP)/TEMP_STEP)+0.5) //* 0.5 is part of a truncation trick
 

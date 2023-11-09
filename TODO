@@ -6,4 +6,5 @@ README > Improve README with better explanation, cases of uses, etc.
 
 # General =====================================================================
 
+Revise all the comments
 Create the CUDA Version of MCMC_C (in main_cuda.cpp)

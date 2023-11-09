@@ -2,7 +2,7 @@
 #	-fpermissive
 
 COMM_FLAGS=-std=c++11 -g
-CPP_FILES=mcmc.cpp ising.cpp tools.cpp
+CPP_FILES=ising.cpp tools.cpp
 
 main:
 	g++ main.cpp $(CPP_FILES) -o main -fopenmp $(COMM_FLAGS)

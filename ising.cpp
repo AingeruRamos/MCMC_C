@@ -28,7 +28,7 @@ SpinGlassIterationResult::SpinGlassIterationResult(double energy, double average
     _average_spin = average_spin;
 }
 
-IterationResult* SpinGlassIterationResult::copy() {
+SpinGlassIterationResult* SpinGlassIterationResult::copy() {
     return new SpinGlassIterationResult(_energy, _average_spin);
 }
 
