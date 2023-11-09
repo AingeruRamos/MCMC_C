@@ -1,6 +1,8 @@
 #ifndef _STACK_H_
 #define _STACK_H_
 
+#include "constants.h"
+
 template <typename T, int N>
 class Stack {
     private:
@@ -8,28 +10,28 @@ class Stack {
         T stack[N];
 
     public:
-        Stack() {
+        _CUDA_DECOR_ Stack() {
             n_elem = 0;
         }
 
-        void push(T elem) {
+        _CUDA_DECOR_ void push(T elem) {
             stack[n_elem] = elem;
             n_elem += 1;
         }
 
-        T top() {
+        _CUDA_DECOR_ T top() {
             return stack[n_elem-1];
         }
 
-        T get(int index) {
+        _CUDA_DECOR_ T get(int index) {
             return stack[index];
         }
 
-        void set(T elem, int index) {
+        _CUDA_DECOR_ void set(T elem, int index) {
             stack[index] = elem;
         }
 
-        Stack<T, N>* copy() {
+        _CUDA_DECOR_ Stack<T, N>* copy() {
             Stack<T, N>* stack_pointer = new Stack<T, N>();
             for(int i=0; i<N; i++) {
                 stack_pointer->push(stack[i]->copy());

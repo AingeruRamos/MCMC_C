@@ -14,6 +14,12 @@
 #ifndef _CONST_H_
 #define _CONST_H_
 
+#ifdef __CUDACC__
+#   define _CUDA_DECOR_ __host__ __device__
+#else
+#   define _CUDA_DECOR_
+#endif
+
 // SIMULATION CONSTANTS
 #define N_ITERATIONS 5
 #define SWAP_ACTIVE 1

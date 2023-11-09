@@ -22,10 +22,10 @@ class SpinGlassIterationResult {
         double _energy;
         int _average_spin;
 
-        SpinGlassIterationResult();
-        SpinGlassIterationResult(double energy, double average_spin);
+        _CUDA_DECOR_ SpinGlassIterationResult();
+        _CUDA_DECOR_ SpinGlassIterationResult(double energy, double average_spin);
 
-        SpinGlassIterationResult* copy();
+        _CUDA_DECOR_ SpinGlassIterationResult* copy();
 };
 
 class SpinGlass {
@@ -40,12 +40,12 @@ class SpinGlass {
 
         Stack<SpinGlassIterationResult*, N_ITERATIONS> _results;
 
-        void init();
-        void* trial();
-        double eval();
-        double delta(void* trial);
-        void move(void* trial);
-        void save(void* trial);
+        _CUDA_DECOR_ void init();
+        _CUDA_DECOR_ void* trial();
+        _CUDA_DECOR_ double eval();
+        _CUDA_DECOR_ double delta(void* trial);
+        _CUDA_DECOR_ void move(void* trial);
+        _CUDA_DECOR_ void save(void* trial);
 };
 
 /**
@@ -58,7 +58,7 @@ class SpinGlass {
  * @brief
  * * Return 1 if index is inside the matrix, else 0
 */
-int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col);
+_CUDA_DECOR_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col);
 
 /**
  * @name single_convolve
@@ -75,10 +75,10 @@ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col);
  * The kernel size is assumed to be (kernel_size x kernel_size). 
  * Those values that, when applying the kernel, are outside the matrix, it will assumed the value 0 
 */
-int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
+_CUDA_DECOR_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
 
-double calc_energy(char* sample);
+_CUDA_DECOR_ double calc_energy(char* sample);
 
-int calc_average_spin(char* sample);
+_CUDA_DECOR_ int calc_average_spin(char* sample);
 
 #endif

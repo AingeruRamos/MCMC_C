@@ -17,6 +17,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "constants.h"
 #include "tools.h"
 
 /**
@@ -39,7 +40,7 @@ class Swap {
          * @param sw_cand_1 Index of the first swap candidate
          * @param sw_cand_2 Index of the second swap candidate
         */
-        Swap(int sw_cand_1, int sw_cand_2) {
+        _CUDA_DECOR_ Swap(int sw_cand_1, int sw_cand_2) {
             _accepted = false;
             _swap_candidate_1 = sw_cand_1;
             _swap_candidate_2 = sw_cand_2;
@@ -54,7 +55,7 @@ class Swap {
  * * Does one iteration in MCMC algorithm in one Replica
 */
 template <typename T>
-void MCMC_iteration(T* model, double temp) {
+_CUDA_DECOR_ void MCMC_iteration(T* model, double temp) {
 
     // Get a trial
     void* trial = model->trial();
@@ -87,7 +88,7 @@ void MCMC_iteration(T* model, double temp) {
  * * Calculates the probability of accepting the swap
 */
 template <typename T>
-double get_swap_prob(Swap* sw, T* models, double* temps) {
+_CUDA_DECOR_ double get_swap_prob(Swap* sw, T* models, double* temps) {
     int sw_cand_1 = sw->_swap_candidate_1;
     int sw_cand_2 = sw->_swap_candidate_2;
 

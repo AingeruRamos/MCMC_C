@@ -14,7 +14,9 @@
 #ifndef _TOOLS_H_
 #define _TOOLS_H_
 
-double rand_uniform();
-double rand_uniform(double start, double end);
+#include "constants.h"
+
+_CUDA_DECOR_ double rand_uniform();
+_CUDA_DECOR_ double rand_uniform(double start, double end);
 
 #endif
