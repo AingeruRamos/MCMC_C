@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Initialazing\n"); }
 
-    Replica* models[TOTAL_REPLICAS];
+    Replica** models = (Replica**) malloc(TOTAL_REPLICAS*sizeof(Replica*));
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         SpinGlass* sp = new SpinGlass();
         sp->init();
@@ -141,7 +141,8 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Reordering\n"); }
 
-    Stack<IterationResult*, N_ITERATIONS>* results_copy[TOTAL_REPLICAS];
+    Stack<IterationResult*, N_ITERATIONS>** results_copy = (Stack<IterationResult*, N_ITERATIONS>**)
+                            malloc(TOTAL_REPLICAS*sizeof(Stack<IterationResult*, N_ITERATIONS>*));
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         results_copy[replica_id] = models[replica_id]->_results.copy();
     }
