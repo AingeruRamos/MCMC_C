@@ -32,11 +32,6 @@ SpinGlassIterationResult* SpinGlassIterationResult::copy() {
     return new SpinGlassIterationResult(_energy, _average_spin);
 }
 
-// SPIN_GLASS DEFS.
-
-int SpinGlass::_kernel_cross[] = {0, 1, 0, 1, 0, 1, 0, 1, 0};
-int SpinGlass::_kernel_semicross[] = {0, 0, 0, 0, 0, 1, 0, 1, 0};
-
 void SpinGlass::init() {
 
     // Initialize sample
@@ -52,7 +47,7 @@ void SpinGlass::init() {
     SpinGlassIterationResult* sp_it = new SpinGlassIterationResult();
 
     /// Calculate initial energy
-    sp_it->_energy = calc_energy(_sample); //* ISING MODEL!!!
+    sp_it->_energy = calc_energy(_sample, _kernel_semicross); //* ISING MODEL!!!
 
     /// Calculate initial average spin
     sp_it->_average_spin = calc_average_spin(_sample);
@@ -75,7 +70,7 @@ double SpinGlass::eval() {
 double SpinGlass::delta(void* trial) {
     int* trial_int = (int*) trial;
     int index = trial_int[0]*N_ROW+trial_int[1];
-    int sum = apply_kernel(_sample, N_ROW, N_COL, index, SpinGlass::_kernel_cross, 3); 
+    int sum = apply_kernel(_sample, N_ROW, N_COL, index, _kernel_cross, 3); 
     int si = _sample[trial_int[0]*N_ROW+trial_int[1]];
     _last_delta = 2.0*si*sum;
     return _last_delta;
@@ -137,10 +132,10 @@ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int ke
     return sum;
 }
 
-double calc_energy(char* sample) {
+double calc_energy(char* sample, int* kernel) {
     double sum = 0;
     for(int index=0; index<(N_ROW*N_COL); index++) {
-        sum += (double) apply_kernel(sample, N_ROW, N_COL, index, SpinGlass::_kernel_semicross, 3);
+        sum += (double) apply_kernel(sample, N_ROW, N_COL, index, kernel, 3);
     }
     return sum;
 }

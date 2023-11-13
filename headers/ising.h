@@ -35,8 +35,8 @@ class SpinGlass {
         double _last_delta;
 
     public:
-        static int _kernel_cross[];
-        static int _kernel_semicross[];
+        int _kernel_cross[9] = {0, 1, 0, 1, 0, 1, 0, 1, 0};
+        int _kernel_semicross[9] = {0, 0, 0, 0, 0, 1, 0, 1, 0};
 
         Stack<SpinGlassIterationResult*, N_ITERATIONS> _results;
 
@@ -77,7 +77,7 @@ _CUDA_DECOR_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, in
 */
 _CUDA_DECOR_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
 
-_CUDA_DECOR_ double calc_energy(char* sample);
+_CUDA_DECOR_ double calc_energy(char* sample, int* kernel);
 
 _CUDA_DECOR_ int calc_average_spin(char* sample);
 
