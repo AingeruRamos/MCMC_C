@@ -25,13 +25,13 @@
 #define SWAP_ACTIVE 1
 
 #define INIT_TEMP 0.1
-#define END_TEMP 0.3
+#define END_TEMP 0.2
 #define TEMP_STEP 0.1
 #define TOTAL_REPLICAS (int) (((END_TEMP-INIT_TEMP)/TEMP_STEP)+0.5) //* 0.5 is part of a truncation trick
 
 // MODEL CONSTANTS
-#define N_ROW 10
-#define N_COL 10
+#define N_ROW 50
+#define N_COL 50
 #define SPIN_PLUS_PERCENTAGE 0.75
 
 #endif

@@ -30,14 +30,15 @@ class SpinGlassIterationResult {
 
 class SpinGlass {
     private:
+        int _kernel_cross[9];
+        int _kernel_semicross[9];
+
         char _sample[N_ROW*N_COL];
 
         double _last_delta;
+        char _last_spin;
 
     public:
-        int _kernel_cross[9] = {0, 1, 0, 1, 0, 1, 0, 1, 0};
-        int _kernel_semicross[9] = {0, 0, 0, 0, 0, 1, 0, 1, 0};
-
         Stack<SpinGlassIterationResult*, N_ITERATIONS> _results;
 
         _CUDA_DECOR_ void init();
@@ -76,9 +77,5 @@ _CUDA_DECOR_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, in
  * Those values that, when applying the kernel, are outside the matrix, it will assumed the value 0 
 */
 _CUDA_DECOR_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
-
-_CUDA_DECOR_ double calc_energy(char* sample, int* kernel);
-
-_CUDA_DECOR_ int calc_average_spin(char* sample);
 
 #endif

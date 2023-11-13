@@ -21,7 +21,10 @@
 
 // SPIN_GLASS_ITERATION_RESULT DEFS.
 
-SpinGlassIterationResult::SpinGlassIterationResult() {}
+SpinGlassIterationResult::SpinGlassIterationResult() {
+    _energy = 0;
+    _average_spin = 0;
+}
 
 SpinGlassIterationResult::SpinGlassIterationResult(double energy, double average_spin) {
     _energy = energy;
@@ -34,6 +37,19 @@ SpinGlassIterationResult* SpinGlassIterationResult::copy() {
 
 void SpinGlass::init() {
 
+    // Convolution kernel assigment
+    for(int index=0; index<9; index++) {
+        _kernel_cross[index] = 0;
+        _kernel_semicross[index] = 0;
+    }
+    _kernel_cross[1] = 1;
+    _kernel_cross[3] = 1;
+    _kernel_cross[5] = 1;
+    _kernel_cross[7] = 1;
+
+    _kernel_semicross[5] = 1;
+    _kernel_semicross[7] = 1;
+
     // Initialize sample
     for(int i=0; i<(N_ROW*N_COL); i++) {
         if(rand_uniform() <= SPIN_PLUS_PERCENTAGE) { _sample[i] = 1; }
@@ -42,15 +58,21 @@ void SpinGlass::init() {
 
     // Initialize ancillary variables
     _last_delta = 0.0;
+    _last_spin = 0;
 
     // Calculate initial iteration
     SpinGlassIterationResult* sp_it = new SpinGlassIterationResult();
 
     /// Calculate initial energy
-    sp_it->_energy = calc_energy(_sample, _kernel_semicross); //* ISING MODEL!!!
+    for(int index=0; index<(N_ROW*N_COL); index++) {
+        double aux = (double) apply_kernel(_sample, N_ROW, N_COL, index, _kernel_semicross, 3);
+        sp_it->_energy += aux;
+    }
 
     /// Calculate initial average spin
-    sp_it->_average_spin = calc_average_spin(_sample);
+    for(int index=0; index<(N_ROW*N_COL); index++) {
+        sp_it->_average_spin += (int) _sample[index];
+    }
 
     _results.push(sp_it);
 }
@@ -79,6 +101,7 @@ double SpinGlass::delta(void* trial) {
 void SpinGlass::move(void* trial) {
     int* trial_int = (int*) trial;
     int index = trial_int[0]*N_ROW+trial_int[1];
+    _last_spin = _sample[index];
     _sample[index] *= -1;
 }
 
@@ -90,7 +113,7 @@ void SpinGlass::save(void* trial) {
         sp_it->_energy += _last_delta;
     }
 
-    sp_it->_average_spin = calc_average_spin(_sample);
+    sp_it->_average_spin -= 2*_last_spin;
 
     _results.push(sp_it);
 }
@@ -113,7 +136,6 @@ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int ke
     int mat_index, kernel_index = 0;
     int act_row, act_col = 0;
 
-    int drow, dcol;
     int padding = (kernel_size-1)/2;
     for(int drow=-padding; drow<=padding; drow++) {
         for(int dcol=-padding; dcol<=padding; dcol++) {
@@ -128,22 +150,6 @@ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int ke
                 sum += kernel[kernel_index]*mat[mat_index];
             }
         }
-    }
-    return sum;
-}
-
-double calc_energy(char* sample, int* kernel) {
-    double sum = 0;
-    for(int index=0; index<(N_ROW*N_COL); index++) {
-        sum += (double) apply_kernel(sample, N_ROW, N_COL, index, kernel, 3);
-    }
-    return sum;
-}
-
-int calc_average_spin(char* sample) {
-    int sum = 0;
-    for(int index=0; index<(N_ROW*N_COL); index++) {
-        sum += (int) sample[index];
     }
     return sum;
 }
