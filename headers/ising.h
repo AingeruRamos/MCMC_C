@@ -29,7 +29,7 @@ class SpinGlassIterationResult {
 };
 
 class SpinGlass {
-    private:
+    public:
         int _kernel_cross[9];
         int _kernel_semicross[9];
 
@@ -37,8 +37,7 @@ class SpinGlass {
 
         double _last_delta;
         char _last_spin;
-
-    public:
+        
         Stack<SpinGlassIterationResult*, N_ITERATIONS> _results;
 
         _CUDA_DECOR_ void init();
