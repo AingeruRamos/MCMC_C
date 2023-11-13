@@ -63,17 +63,12 @@ void SpinGlass::init() {
     // Calculate initial iteration
     SpinGlassIterationResult* sp_it = new SpinGlassIterationResult();
 
-    /// Calculate initial energy
+    /// Calculate initial energy and average spin
     for(int index=0; index<(N_ROW*N_COL); index++) {
-        double aux = (double) apply_kernel(_sample, N_ROW, N_COL, index, _kernel_semicross, 3);
-        sp_it->_energy += aux;
-    }
-
-    /// Calculate initial average spin
-    for(int index=0; index<(N_ROW*N_COL); index++) {
+        sp_it->_energy += (double) apply_kernel(_sample, N_ROW, N_COL, index, _kernel_semicross, 3);;
         sp_it->_average_spin += (int) _sample[index];
     }
-
+    
     _results.push(sp_it);
 }
 
