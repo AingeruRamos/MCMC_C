@@ -1,6 +1,6 @@
 // Copyright Notice ===========================================================
 //
-// tools.h, Copyright (c) 2023 Aingeru Ramos
+// rand.cpp, Copyright (c) 2023 Aingeru Ramos
 //
 // All Rights Reserved ========================================================
 //
@@ -11,12 +11,14 @@
 //
 // ============================================================================
 
-#ifndef _TOOLS_H_
-#define _TOOLS_H_
+#include "./headers/rand.h"
 
-#include "constants.h"
+#include <stdlib.h>
 
-_CUDA_DECOR_ double rand_uniform();
-_CUDA_DECOR_ double rand_uniform(double start, double end);
+double rand_uniform() {
+    return (double)rand()/(double)RAND_MAX;
+}
 
-#endif
+double rand_uniform(double start, double end) {
+    return (end-start)*rand_uniform()+start;
+}

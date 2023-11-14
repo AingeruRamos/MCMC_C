@@ -18,7 +18,7 @@
 #include <stdlib.h>
 
 #include "constants.h"
-#include "tools.h"
+#include "rand.h"
 
 /**
  * @class Swap

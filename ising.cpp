@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 #include "./headers/constants.h"
-#include "./headers/tools.h"
+#include "./headers/rand.h"
 
 // SPIN_GLASS_ITERATION_RESULT DEFS.
 
