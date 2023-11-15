@@ -16,7 +16,21 @@
 
 #include "constants.h"
 
+/**
+ * @name rand_uniform
+ * @return A random value
+ * @brief
+ * * Calculates a random in the raqnge of [0, 1]
+*/
 _CUDA_DECOR_ double rand_uniform();
+
+/**
+ * @name rand_uniform
+ * @overload
+ * @return A random value
+ * @brief
+ * * Calculates a random in the range of [start, end]
+*/
 _CUDA_DECOR_ double rand_uniform(double start, double end);
 
 #endif

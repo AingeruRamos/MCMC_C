@@ -49,18 +49,22 @@ class Swap {
 
 /**
  * @name MCMC_iteration
- * @param model A Replica
+ * @remark template
+ * @param replica A Replica
  * @param temp Temperature to use for the simulation
  * @brief
  * * Does one iteration in MCMC algorithm in one Replica
+ * @note
+ * This function is a template. T is the type of replica to use
 */
 template <typename T>
-_CUDA_DECOR_ void MCMC_iteration(T* model, double temp) {
+_CUDA_DECOR_ void MCMC_iteration(T* replica, double temp) {
 
     // Get a trial
-    void* trial = model->trial();
+    void* trial = replica->trial();
+
     // Calculate the acceptance probability
-    double delta_energy = model->delta(trial);
+    double delta_energy = replica->delta(trial);
 
     double acc_p = 0;
     if(delta_energy <= 0) { acc_p = 1.0; }
@@ -68,34 +72,37 @@ _CUDA_DECOR_ void MCMC_iteration(T* model, double temp) {
 
     // Change state
     double ranf =  rand_uniform();
-    if(ranf < acc_p) { model->move(trial); } //* Trial is accepted
+    if(ranf < acc_p) { replica->move(trial); } //* Trial is accepted
     else {
         free(trial);
         trial = nullptr; //* Used as flag of rejected move
     }
 
-    // Save actual state of the model
-    model->save(trial);
+    // Save actual state of the replica
+    replica->save(trial);
     free(trial);
 }
 
 /**
  * @name get_swap_prob
- * @param models Array of Replica-s
+ * @remark template
+ * @param replicas Array of replicas
  * @param temps Array of temperatures
  * @return Probabilty to accept the swap
  * @brief
  * * Calculates the probability of accepting the swap
+ * @note
+ * This function is a template. T is the type of replica to use
 */
 template <typename T>
-_CUDA_DECOR_ double get_swap_prob(Swap* sw, T* models, double* temps) {
+_CUDA_DECOR_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
     int sw_cand_1 = sw->_swap_candidate_1;
     int sw_cand_2 = sw->_swap_candidate_2;
 
     // Get the evals
     double evals[2];
-    evals[0] = models[sw_cand_1].eval();
-    evals[1] = models[sw_cand_2].eval();
+    evals[0] = replicas[sw_cand_1]._results.top()->_energy;
+    evals[1] = replicas[sw_cand_2]._results.top()->_energy;
 
     // Calculate the swap probability
     double temp_diff = (1/temps[sw_cand_2])-(1/temps[sw_cand_1]);

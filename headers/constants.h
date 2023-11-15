@@ -14,24 +14,25 @@
 #ifndef _CONST_H_
 #define _CONST_H_
 
-#ifdef __CUDACC__
+// CUDA DECORATOR
+#ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
 #   define _CUDA_DECOR_ __host__ __device__
 #else
 #   define _CUDA_DECOR_
 #endif
 
 // SIMULATION CONSTANTS
-#define N_ITERATIONS 5
-#define SWAP_ACTIVE 1
+#define N_ITERATIONS 250000
+#define SWAP_ACTIVE 0
 
 #define INIT_TEMP 0.1
-#define END_TEMP 0.2
-#define TEMP_STEP 0.1
+#define END_TEMP 3.1
+#define TEMP_STEP 0.5
 #define TOTAL_REPLICAS (int) (((END_TEMP-INIT_TEMP)/TEMP_STEP)+0.5) //* 0.5 is part of a truncation trick
 
 // MODEL CONSTANTS
-#define N_ROW 50
-#define N_COL 50
+#define N_ROW 200
+#define N_COL 200
 #define SPIN_PLUS_PERCENTAGE 0.75
 
 #endif

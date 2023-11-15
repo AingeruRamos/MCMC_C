@@ -35,6 +35,8 @@ SpinGlassIterationResult* SpinGlassIterationResult::copy() {
     return new SpinGlassIterationResult(_energy, _average_spin);
 }
 
+// SPIN_GLASS DEFS.
+
 void SpinGlass::init() {
 
     // Convolution kernel assigment
@@ -77,11 +79,6 @@ void* SpinGlass::trial() {
     arr[0] = (int) (rand_uniform()*N_ROW);
     arr[1] = (int) (rand_uniform()*N_COL);
     return arr;
-}
-
-double SpinGlass::eval() {
-    SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) _results.top();
-    return sp_it->_energy;
 }
 
 double SpinGlass::delta(void* trial) {

@@ -19,7 +19,7 @@
 #include "./headers/constants.h"
 #include "./headers/ising.h"
 #include "./headers/mcmc.h"
-#include "./headers/tools.h"
+#include "./headers/rand.h"
 #include "./headers/stack.h"
 
 void option_enabeler(int argc, char** argv);
@@ -141,42 +141,46 @@ int main(int argc, char** argv) {
     if(DEBUG_FLOW) { printf("Reordering\n"); }
 
     Stack<SpinGlassIterationResult*, N_ITERATIONS>** results_copy = (Stack<SpinGlassIterationResult*, N_ITERATIONS>**)
-                            malloc(TOTAL_REPLICAS*sizeof(Stack<SpinGlassIterationResult*, N_ITERATIONS>*));
+                                        malloc(TOTAL_REPLICAS*sizeof(Stack<SpinGlassIterationResult*, N_ITERATIONS>*));
+
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         results_copy[replica_id] = models[replica_id]._results.copy();
     }
 
-    int* swap_replica_ids = (int*) malloc(TOTAL_REPLICAS*sizeof(int));
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        swap_replica_ids[replica_id] = replica_id;
-    }
+    if(SWAP_ACTIVE) {
 
-    #pragma omp parallel
-    {
-        int tid = omp_get_thread_num();
+        int* swap_replica_ids = (int*) malloc(TOTAL_REPLICAS*sizeof(int));
+        for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+            swap_replica_ids[replica_id] = replica_id;
+        }
 
-        for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
+        #pragma omp parallel
+        {
+            int tid = omp_get_thread_num();
 
-            //? Search a way to do in parallel
-            for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-                int swap_replica_id = swap_replica_ids[replica_id];
-                models[replica_id]._results.set(results_copy[swap_replica_id]->get(iteration), iteration);
-            }
+            for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
 
-            #pragma omp barrier
+                //? Search a way to do in parallel
+                for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
+                    int swap_replica_id = swap_replica_ids[replica_id];
+                    models[replica_id]._results.set(results_copy[swap_replica_id]->get(iteration), iteration);
+                }
 
-            if(iteration != 0) {
-                for(int swap_index=tid; swap_index<n_swaps[iteration-1]; swap_index+=N_THREADS) {
-                    Swap* sw = swap_planning[iteration-1][swap_index];
-                    if(sw->_accepted) {
-                        int aux = swap_replica_ids[sw->_swap_candidate_1];
-                        swap_replica_ids[sw->_swap_candidate_1] = swap_replica_ids[sw->_swap_candidate_2];
-                        swap_replica_ids[sw->_swap_candidate_2] = aux;
+                #pragma omp barrier
+
+                if(iteration != 0) {
+                    for(int swap_index=tid; swap_index<n_swaps[iteration-1]; swap_index+=N_THREADS) {
+                        Swap* sw = swap_planning[iteration-1][swap_index];
+                        if(sw->_accepted) {
+                            int aux = swap_replica_ids[sw->_swap_candidate_1];
+                            swap_replica_ids[sw->_swap_candidate_1] = swap_replica_ids[sw->_swap_candidate_2];
+                            swap_replica_ids[sw->_swap_candidate_2] = aux;
+                        }
                     }
                 }
-            }
 
-            #pragma omp barrier
+                #pragma omp barrier
+            }
         }
     }
 
@@ -200,6 +204,7 @@ int main(int argc, char** argv) {
     printf("%f\n", SPIN_PLUS_PERCENTAGE);
 
     printf("#\n");
+
     /*
     for(int i=0; i<N_ITERATIONS; i++) { // SWAP PLANNING
         for(int j=0; j<n_swaps[i]; j++) {
@@ -209,6 +214,7 @@ int main(int argc, char** argv) {
         printf("\n");
     }
     */
+
     for(int i=0; i<N_ITERATIONS; i++) { // SWAP PLANNING (ACCEPTED)
         for(int j=0; j<n_swaps[i]; j++) {
             Swap* sw = swap_planning[i][j];
@@ -226,21 +232,23 @@ int main(int argc, char** argv) {
 
     printf("#\n"); // RESULTS
 
-    if(DEBUG_RESULTS) {
+    /*
+    if(SWAP_ACTIVE && DEBUG_RESULTS) {
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
             print_stack(results_copy[replica_id]);
             printf("#\n");
         }
     }
+    */
 
-    printf("#\n");
+    //printf("#\n");
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         print_stack(&models[replica_id]._results);
         printf("#\n");
     }
 
-    printf("#\n");
+    //printf("#\n");
 
     return 0;
 }
