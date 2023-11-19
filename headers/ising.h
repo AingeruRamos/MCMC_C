@@ -11,8 +11,8 @@
 //
 // ============================================================================
 
-#ifndef _ISING_H_
-#define _ISING_H_
+#ifndef _MODEL_H_
+#define _MODEL_H_
 
 #include "constants.h"
 #include "stack.h"
@@ -150,5 +150,9 @@ _CUDA_DECOR_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, in
  * Those values that, when applying the kernel, are outside the matrix, it will assumed the value 0 
 */
 _CUDA_DECOR_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
+
+
+#define MODEL_NAME SpinGlass
+#define MODEL_ITER SpinGlassIterationResult
 
 #endif

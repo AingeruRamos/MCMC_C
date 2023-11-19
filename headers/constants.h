@@ -22,17 +22,39 @@
 #endif
 
 // SIMULATION CONSTANTS
-#define N_ITERATIONS 250000
-#define SWAP_ACTIVE 0
+#ifndef N_ITERATIONS
+    #define N_ITERATIONS 250000
+#endif
 
-#define INIT_TEMP 0.1
-#define END_TEMP 3.1
-#define TEMP_STEP 0.5
+#ifndef SWAP_ACTIVE
+    #define SWAP_ACTIVE 0
+#endif
+
+#ifndef INIT_TEMP
+    #define INIT_TEMP 0.1
+#endif
+
+#ifndef END_TEMP
+    #define END_TEMP 3.1
+#endif
+
+#ifndef TEMP_STEP
+    #define TEMP_STEP 0.5
+#endif
+
 #define TOTAL_REPLICAS (int) (((END_TEMP-INIT_TEMP)/TEMP_STEP)+0.5) //* 0.5 is part of a truncation trick
 
 // MODEL CONSTANTS
-#define N_ROW 200
-#define N_COL 200
-#define SPIN_PLUS_PERCENTAGE 0.75
+#ifndef N_ROW
+    #define N_ROW 200
+#endif
+
+#ifndef N_COL
+    #define N_COL 200
+#endif
+
+#ifndef SPIN_PLUS_PERCENTAGE
+    #define SPIN_PLUS_PERCENTAGE 0.75
+#endif
 
 #endif

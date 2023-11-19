@@ -1,24 +1,25 @@
 # MCMC_C
 
-This project executes the Metropolis-Hastling algorithm
+This project executes the Metropolis-Hastling algorithm.
 
-## Instalation and Configuration
+## Instalation and Execution
 
 ### Instalation
 
-There is not installation required. Just download the code.
+Once downloaded the source code, it can be compiled using the Makefile provided in the project folder. To compile type the next in the terminal: ```make main```
 
-### Configuration
+### Execution
+This code is intended to be executed with OpenMP. To assign the number of threads you want to use, you must introduce in terminal the next: ```export OMP_NUM_THREADS=<num_threads>```
 
-The foler of the project includes a Makefile for the compilation of the source code. Just introduce in terminal the next: ```make main```
-
-It will appear a executable file in the root folder with name ```main```
+It will appear a executable file in the project folder with name ```main```
 
 ## Usage
 
-This code is intended to be executed with OpenMP. To assign the number of threads you want to use, you must introduce in terminal the next: ```export OMP_NUM_THREADS=<num_threads>```
+In order to generalize the implementation of the algorithm to any given model, the user must implement 2 classes that encapsulates the behaviour of the model. Examples of this classes are provided in 'headers/model_template.h'. The program wouldnt compile if this classes are not implemented.
 
-To start executing use the next command: ```./main```
+**IMPORTANT NOTE: Not forget to change the ```MODEL_NAME``` and ```MODEL_ITER``` define statements to your class names.**
+
+Once completed this implementations, the program can be compiled and executed.
 
 ## Credits
 
