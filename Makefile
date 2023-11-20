@@ -1,8 +1,10 @@
-COMM_FLAGS=-std=c++11 -g
+COMM_FLAGS=-std=c++11
 CPP_FILES=ising.cpp rand.cpp
 
+DEFINES ?=
+
 main:
-	g++ main.cpp $(CPP_FILES) -o main -fopenmp $(COMM_FLAGS) -DN_ROW=10
+	g++ main.cpp $(CPP_FILES) -o main -fopenmp $(COMM_FLAGS) $(DEFINES)
 
 prueba:
 	g++ prueba.cpp $(CPP_FILES) -o prueba -fopenmp $(COMM_FLAGS)

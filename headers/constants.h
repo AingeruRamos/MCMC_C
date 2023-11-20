@@ -23,7 +23,7 @@
 
 // SIMULATION CONSTANTS
 #ifndef N_ITERATIONS
-    #define N_ITERATIONS 250000
+    #define N_ITERATIONS 1000000
 #endif
 
 #ifndef SWAP_ACTIVE
@@ -39,7 +39,7 @@
 #endif
 
 #ifndef TEMP_STEP
-    #define TEMP_STEP 0.5
+    #define TEMP_STEP 0.1
 #endif
 
 #define TOTAL_REPLICAS (int) (((END_TEMP-INIT_TEMP)/TEMP_STEP)+0.5) //* 0.5 is part of a truncation trick
