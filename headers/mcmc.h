@@ -18,7 +18,6 @@
 #include <stdlib.h>
 
 #include "constants.h"
-#include "rand.h"
 
 /**
  * @class Swap
@@ -66,9 +65,7 @@ _CUDA_DECOR_ void MCMC_iteration(T* replica, double temp) {
     // Calculate the acceptance probability
     double delta_energy = replica->delta();
 
-    double acc_p = 0;
-    if(delta_energy <= 0) { acc_p = 1.0; }
-    else { acc_p = exp(-delta_energy/temp); }
+    double acc_p = (delta_energy <= 0) ? 1.0 : exp(-delta_energy/temp);
 
     // Change state
     double ranf =  replica->_rand_gen.rand_uniform();

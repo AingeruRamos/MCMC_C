@@ -54,6 +54,15 @@ class SpinGlassIterationResult {
         _CUDA_DECOR_ SpinGlassIterationResult* copy();
 };
 
+/**
+ * @class SpinGlassTrial
+ * @param _accepted If the trial is accepted
+ * @param _row_index Row index selected for the trial
+ * @param _col_index Col index selected for the trial
+ * @brief
+ * * Instances of this class represents a trial on the MCMC
+ * * algorithm. Specifucally, a trial of a SpinGlass model
+*/
 class SpinGlassTrial {
     public:
         char _accepted;
@@ -62,12 +71,14 @@ class SpinGlassTrial {
 
 /**
  * @class SpinGlass
+ * @param _rand_gen A random generator
+ * @param _trial State of the trial
+ * @param _results Stack of iteration results
  * @param _kernel_cross Convolution kernel in cross shape
  * @param _kernel_semicross Convolution kernel in semi-cross shape (Bottom and Right)
  * @param _sample State of the SpinGlass
  * @param _last_delta The last delta calculated with 'delta()'
  * @param _last_spin The value of the spin moved in the trial
- * @param _results Stack of iteration results
  * @brief
  * * Instances of this class represent a replica in
  * * the MCMC algorithm. Specifically, this replica
@@ -75,6 +86,10 @@ class SpinGlassTrial {
 */
 class SpinGlass {
     public:
+        RandGen _rand_gen;
+        SpinGlassTrial _trial;
+        Stack<SpinGlassIterationResult*, N_ITERATIONS> _results;
+        
         int _kernel_cross[9];
         int _kernel_semicross[9];
 
@@ -82,10 +97,6 @@ class SpinGlass {
 
         double _last_delta;
         char _last_spin;
-        
-        RandGen _rand_gen;
-        SpinGlassTrial _trial;
-        Stack<SpinGlassIterationResult*, N_ITERATIONS> _results;
 
         /**
          * @name init

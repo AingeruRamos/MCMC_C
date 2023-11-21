@@ -54,8 +54,7 @@ void SpinGlass::init() {
 
     // Initialize sample
     for(int i=0; i<(N_ROW*N_COL); i++) {
-        if(_rand_gen.rand_uniform() <= SPIN_PLUS_PERCENTAGE) { _sample[i] = 1; }
-        else { _sample[i] = -1; }
+        _sample[i] = (_rand_gen.rand_uniform() <= SPIN_PLUS_PERCENTAGE) ? 1 : -1;
     }
 
     // Initialize ancillary variables

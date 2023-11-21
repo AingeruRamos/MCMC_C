@@ -41,15 +41,31 @@ class ReplicaIterationResult {
 };
 
 /**
+ * @class ReplicaTrial
+ * @param _accepted If the trial is accepted
+ * @brief
+ * * Instances of this class represents a trial on the MCMC
+ * * algorithm
+*/
+class ReplicaTrial {
+    public:
+        char _accepted;
+};
+
+/**
  * @class Replica
+ * @param _rand_gen A random generator
+ * @param _trial State of the trial
+ * @param _results Stack of iteration results
  * @brief
  * * Instances of this class represents a replica
  * * with certain behaviour (The model)
 */
 class Replica {
     public:
-
-        Stack<IterationResult*, N_ITERATIONS> _results;
+        RandGen _rand_gen;
+        SpinGlassTrial _trial;
+        Stack<ReplicaIterationResult*, N_ITERATIONS> _results;
 
         /**
          * @name init

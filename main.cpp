@@ -94,10 +94,7 @@ int main(int argc, char** argv) {
 
     #pragma omp parallel
     {
-        #pragma omp master
-        {
-            N_THREADS = omp_get_num_threads();
-        }
+        N_THREADS = omp_get_num_threads();
 
         int tid = omp_get_thread_num();
 
@@ -223,7 +220,6 @@ int main(int argc, char** argv) {
     printf("%f\n", total_exec);
 
     printf("#\n"); // RESULTS
-
     /*
     if(SWAP_ACTIVE && DEBUG_RESULTS) {
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
@@ -232,16 +228,13 @@ int main(int argc, char** argv) {
         }
     }
     */
-    /*
-    printf("#\n");
+    //printf("#\n");
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         print_stack(&models[replica_id]._results);
         printf("#\n");
     }
 
-    printf("#\n");
-    */
     return 0;
 }
 
