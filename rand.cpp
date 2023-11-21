@@ -14,11 +14,21 @@
 #include "./headers/rand.h"
 
 #include <stdlib.h>
+#include <time.h>
 
-double rand_uniform() {
-    return (double)rand()/(double)RAND_MAX;
+RandGen::RandGen() {
+    _rand_state = time(NULL);
 }
 
-double rand_uniform(double start, double end) {
-    return (end-start)*rand_uniform()+start;
+void RandGen::set_state(unsigned int seed) {
+    _rand_state = seed;
+}
+
+double RandGen::rand_uniform() {
+    return (double)rand_r(&_rand_state)/(double)RAND_MAX;
+}
+
+double RandGen::rand_uniform(double start, double end) {
+    double r = (double)rand_r(&_rand_state)/(double)RAND_MAX;
+    return (end-start)*r+start;
 }

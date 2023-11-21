@@ -54,7 +54,7 @@ void SpinGlass::init() {
 
     // Initialize sample
     for(int i=0; i<(N_ROW*N_COL); i++) {
-        if(rand_uniform() <= SPIN_PLUS_PERCENTAGE) { _sample[i] = 1; }
+        if(_rand_gen.rand_uniform() <= SPIN_PLUS_PERCENTAGE) { _sample[i] = 1; }
         else { _sample[i] = -1; }
     }
 
@@ -67,7 +67,7 @@ void SpinGlass::init() {
 
     /// Calculate initial energy and average spin
     for(int index=0; index<(N_ROW*N_COL); index++) {
-        sp_it->_energy += (double) apply_kernel(_sample, N_ROW, N_COL, index, _kernel_semicross, 3);;
+        sp_it->_energy += (double) apply_kernel(_sample, N_ROW, N_COL, index, _kernel_semicross, 3);
         sp_it->_average_spin += (int) _sample[index];
     }
     
@@ -76,8 +76,8 @@ void SpinGlass::init() {
 
 void* SpinGlass::trial() {
     int* arr = (int*) malloc(2*sizeof(int));
-    arr[0] = (int) (rand_uniform()*N_ROW);
-    arr[1] = (int) (rand_uniform()*N_COL);
+    arr[0] = (int) (_rand_gen.rand_uniform()*N_ROW);
+    arr[1] = (int) (_rand_gen.rand_uniform()*N_COL);
     return arr;
 }
 

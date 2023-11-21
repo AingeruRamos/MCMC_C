@@ -35,6 +35,8 @@ int main(int argc, char** argv) {
 
     option_enabeler(argc, argv);
 
+    RandGen rand_gen;
+
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
@@ -120,7 +122,7 @@ int main(int argc, char** argv) {
 
                     if(DEBUG_FLOW) { printf("Swap pre-calculus (%d): OK\n", swap_index); }
 
-                    if(rand_uniform() < swap_prob) {
+                    if(rand_gen.rand_uniform() < swap_prob) {
                         double aux = temps[swap->_swap_candidate_1];
                         temps[swap->_swap_candidate_1] = temps[swap->_swap_candidate_2];
                         temps[swap->_swap_candidate_2] = aux;

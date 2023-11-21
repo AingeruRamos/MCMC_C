@@ -23,7 +23,7 @@
 
 // SIMULATION CONSTANTS
 #ifndef N_ITERATIONS
-    #define N_ITERATIONS 1000000
+    #define N_ITERATIONS 500
 #endif
 
 #ifndef SWAP_ACTIVE
@@ -35,7 +35,7 @@
 #endif
 
 #ifndef END_TEMP
-    #define END_TEMP 3.1
+    #define END_TEMP 1.1
 #endif
 
 #ifndef TEMP_STEP
@@ -46,11 +46,11 @@
 
 // MODEL CONSTANTS
 #ifndef N_ROW
-    #define N_ROW 200
+    #define N_ROW 50
 #endif
 
 #ifndef N_COL
-    #define N_COL 200
+    #define N_COL 50
 #endif
 
 #ifndef SPIN_PLUS_PERCENTAGE

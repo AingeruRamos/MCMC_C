@@ -15,6 +15,7 @@
 #define _MODEL_H_
 
 #include "constants.h"
+#include "rand.h"
 #include "stack.h"
 
 /**
@@ -76,6 +77,7 @@ class SpinGlass {
         double _last_delta;
         char _last_spin;
         
+        RandGen _rand_gen;
         Stack<SpinGlassIterationResult*, N_ITERATIONS> _results;
 
         /**

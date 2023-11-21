@@ -71,7 +71,7 @@ _CUDA_DECOR_ void MCMC_iteration(T* replica, double temp) {
     else { acc_p = exp(-delta_energy/temp); }
 
     // Change state
-    double ranf =  rand_uniform();
+    double ranf =  replica->_rand_gen.rand_uniform();
     if(ranf < acc_p) { replica->move(trial); } //* Trial is accepted
     else {
         free(trial);

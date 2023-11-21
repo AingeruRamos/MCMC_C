@@ -17,20 +17,48 @@
 #include "constants.h"
 
 /**
- * @name rand_uniform
- * @return A random value
+ * @class RandGen
+ * @param _rand_state XXX
  * @brief
- * * Calculates a random in the raqnge of [0, 1]
+ * * XXX
 */
-_CUDA_DECOR_ double rand_uniform();
+class RandGen {
+    private:
+        unsigned int _rand_state;
+    
+    public:
+        /**
+         * @name RandGen
+         * @remark constructor
+        */
+        RandGen();
 
-/**
- * @name rand_uniform
- * @overload
- * @return A random value
- * @brief
- * * Calculates a random in the range of [start, end]
-*/
-_CUDA_DECOR_ double rand_uniform(double start, double end);
+        /**
+         * @overload
+         * @param _seed Initial seed of the generator
+         * @brief
+         * * Sets the initial state of the generator
+        */
+        _CUDA_DECOR_ void set_state(unsigned int _seed);
+
+        /**
+         * 
+         * @name rand_uniform
+         * @return A random value
+         * @brief
+         * * Calculates a random in the raqnge of [0, 1]
+        */
+        _CUDA_DECOR_ double rand_uniform();
+
+        /**
+         * @name rand_uniform
+         * @overload
+         * @return A random value
+         * @brief
+         * * Calculates a random in the range of [start, end]
+        */
+        _CUDA_DECOR_ double rand_uniform(double start, double end);
+
+};
 
 #endif
