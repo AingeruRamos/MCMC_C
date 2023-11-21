@@ -74,38 +74,34 @@ void SpinGlass::init() {
     _results.push(sp_it);
 }
 
-void* SpinGlass::trial() {
-    int* arr = (int*) malloc(2*sizeof(int));
-    arr[0] = (int) (_rand_gen.rand_uniform()*N_ROW);
-    arr[1] = (int) (_rand_gen.rand_uniform()*N_COL);
-    return arr;
+void SpinGlass::trial() {
+    _trial._accepted = 1;
+    _trial._row_index = (int) (_rand_gen.rand_uniform()*N_ROW);
+    _trial._col_index = (int) (_rand_gen.rand_uniform()*N_COL);
 }
 
-double SpinGlass::delta(void* trial) {
-    int* trial_int = (int*) trial;
-    int index = trial_int[0]*N_ROW+trial_int[1];
+double SpinGlass::delta() {
+    int index = _trial._row_index*N_ROW+_trial._col_index;
     int sum = apply_kernel(_sample, N_ROW, N_COL, index, _kernel_cross, 3); 
-    int si = _sample[trial_int[0]*N_ROW+trial_int[1]];
+    int si = _sample[index];
     _last_delta = 2.0*si*sum;
     return _last_delta;
 }
 
-void SpinGlass::move(void* trial) {
-    int* trial_int = (int*) trial;
-    int index = trial_int[0]*N_ROW+trial_int[1];
+void SpinGlass::move() {
+    int index = _trial._row_index*N_ROW+_trial._col_index;
     _last_spin = _sample[index];
     _sample[index] *= -1;
 }
 
-void SpinGlass::save(void* trial) {
+void SpinGlass::save() {
     SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results.top();
     SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) sp_last_it->copy();
 
-    if(trial != nullptr) { //* If trial has been accepted
+    if(_trial._accepted) { //* If trial has been accepted
         sp_it->_energy += _last_delta;
+        sp_it->_average_spin -= 2*_last_spin;
     }
-
-    sp_it->_average_spin -= 2*_last_spin;
 
     _results.push(sp_it);
 }

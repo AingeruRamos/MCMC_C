@@ -61,10 +61,10 @@ template <typename T>
 _CUDA_DECOR_ void MCMC_iteration(T* replica, double temp) {
 
     // Get a trial
-    void* trial = replica->trial();
+    replica->trial();
 
     // Calculate the acceptance probability
-    double delta_energy = replica->delta(trial);
+    double delta_energy = replica->delta();
 
     double acc_p = 0;
     if(delta_energy <= 0) { acc_p = 1.0; }
@@ -72,15 +72,13 @@ _CUDA_DECOR_ void MCMC_iteration(T* replica, double temp) {
 
     // Change state
     double ranf =  replica->_rand_gen.rand_uniform();
-    if(ranf < acc_p) { replica->move(trial); } //* Trial is accepted
+    if(ranf < acc_p) { replica->move(); } //* Trial is accepted
     else {
-        free(trial);
-        trial = nullptr; //* Used as flag of rejected move
+        replica->_trial._accepted = 0; //* Used as flag of rejected move
     }
 
     // Save actual state of the replica
-    replica->save(trial);
-    free(trial);
+    replica->save();
 }
 
 /**
