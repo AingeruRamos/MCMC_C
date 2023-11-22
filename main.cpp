@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <omp.h>
 
 #include "./headers/constants.h"
@@ -35,6 +36,7 @@ int main(int argc, char** argv) {
 
     option_enabeler(argc, argv);
 
+    srand(time(NULL));
     RandGen rand_gen;
 
 //-----------------------------------------------------------------------------|
@@ -45,6 +47,7 @@ int main(int argc, char** argv) {
     MODEL_NAME* models = (MODEL_NAME*) malloc(TOTAL_REPLICAS*sizeof(MODEL_NAME));
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         MODEL_NAME* sp = &models[replica_id];
+        sp->_rand_gen.set_state(rand());
         sp->init();
     }
 
@@ -229,12 +232,12 @@ int main(int argc, char** argv) {
     }
     */
     //printf("#\n");
-
+    /*
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         print_stack(&models[replica_id]._results);
         printf("#\n");
     }
-
+    */
     return 0;
 }
 
