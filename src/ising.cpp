@@ -11,13 +11,13 @@
 //
 // ============================================================================
 
-#include "./headers/ising.h"
+#include "../header/ising.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "./headers/constants.h"
-#include "./headers/rand.h"
+#include "../header/constants.h"
+#include "../header/rand.h"
 
 // SPIN_GLASS_ITERATION_RESULT DEFS.
 

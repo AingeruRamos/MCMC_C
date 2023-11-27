@@ -11,7 +11,7 @@
 //
 // ============================================================================
 
-#include "./headers/rand.h"
+#include "../header/rand.h"
 
 #include <stdlib.h>
 #include <time.h>

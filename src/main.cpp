@@ -17,11 +17,11 @@
 #include <time.h>
 #include <omp.h>
 
-#include "./headers/constants.h"
-#include "./headers/ising.h"
-#include "./headers/mcmc.h"
-#include "./headers/rand.h"
-#include "./headers/stack.h"
+#include "../header/constants.h"
+#include "../header/ising.h"
+#include "../header/mcmc.h"
+#include "../header/rand.h"
+#include "../header/stack.h"
 
 void option_enabeler(int argc, char** argv);
 void print_stack(Stack<MODEL_ITER*, N_ITERATIONS>* stack);
