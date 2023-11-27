@@ -37,7 +37,7 @@ SpinGlassIterationResult* SpinGlassIterationResult::copy() {
 
 // SPIN_GLASS DEFS.
 
-void SpinGlass::init() {
+_DEVICE_ void SpinGlass::init() {
 
     // Convolution kernel assigment
     for(int index=0; index<9; index++) {
@@ -73,13 +73,13 @@ void SpinGlass::init() {
     _results.push(sp_it);
 }
 
-void SpinGlass::trial() {
+_DEVICE_ void SpinGlass::trial() {
     _trial._accepted = 1;
     _trial._row_index = (int) (_rand_gen.rand_uniform()*N_ROW);
     _trial._col_index = (int) (_rand_gen.rand_uniform()*N_COL);
 }
 
-double SpinGlass::delta() {
+_DEVICE_ double SpinGlass::delta() {
     int index = _trial._row_index*N_ROW+_trial._col_index;
     int sum = apply_kernel(_sample, N_ROW, N_COL, index, _kernel_cross, 3); 
     int si = _sample[index];
@@ -87,13 +87,13 @@ double SpinGlass::delta() {
     return _last_delta;
 }
 
-void SpinGlass::move() {
+_DEVICE_ void SpinGlass::move() {
     int index = _trial._row_index*N_ROW+_trial._col_index;
     _last_spin = _sample[index];
     _sample[index] *= -1;
 }
 
-void SpinGlass::save() {
+_DEVICE_ void SpinGlass::save() {
     SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results.top();
     SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) sp_last_it->copy();
 
@@ -107,14 +107,14 @@ void SpinGlass::save() {
 
 //
 
-int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col) {
+_DEVICE_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col) {
     if((row >= 0) && (row < n_row) && (col >= 0) && (col < n_col)) {
         return 1;
     }
     return 0;
 }
 
-int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size) {
+_DEVICE_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size) {
     int sum=0;
 
     int center_row = (int) index/n_row;

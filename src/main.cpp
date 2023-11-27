@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
     */
     //printf("#\n");
     /*
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+    for(int replica_id=0; replica_id<N_ITERATIONS; replica_id++) {
         print_stack(&models[replica_id]._results);
         printf("#\n");
     }

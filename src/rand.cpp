@@ -14,21 +14,29 @@
 #include "../header/rand.h"
 
 #include <stdlib.h>
-#include <time.h>
 
-RandGen::RandGen() {
-    _rand_state = time(NULL);
+_DEVICE_ void RandGen::set_state(unsigned int seed) {
+    #ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
+        curand_init(seed, 0, 0, &_rand_state);
+    #else
+        _rand_state = seed;
+    #endif
 }
 
-void RandGen::set_state(unsigned int seed) {
-    _rand_state = seed;
+_DEVICE_ double RandGen::rand_uniform() {
+    #ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
+        return (double)curand_uniform(&_rand_state);
+    #else
+        return (double)rand_r(&_rand_state)/(double)RAND_MAX;
+    #endif
 }
 
-double RandGen::rand_uniform() {
-    return (double)rand_r(&_rand_state)/(double)RAND_MAX;
-}
+_DEVICE_ double RandGen::rand_uniform(double start, double end) {
+    #ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
+        double r = (double)curand_uniform(&_rand_state);
+    #else
+        double r = (double)rand_r(&_rand_state)/(double)RAND_MAX;
+    #endif
 
-double RandGen::rand_uniform(double start, double end) {
-    double r = (double)rand_r(&_rand_state)/(double)RAND_MAX;
     return (end-start)*r+start;
 }

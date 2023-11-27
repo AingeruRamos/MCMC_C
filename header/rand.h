@@ -16,6 +16,14 @@
 
 #include "constants.h"
 
+#ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
+#   include <curand.h>
+#   include <curand_kernel.h>
+#   define rand_gen_t curandState
+#else
+#   define rand_gen_t unsigned int
+#endif
+
 /**
  * @class RandGen
  * @param _rand_state XXX
@@ -24,22 +32,17 @@
 */
 class RandGen {
     private:
-        unsigned int _rand_state;
+        rand_gen_t _rand_state;
     
     public:
-        /**
-         * @name RandGen
-         * @remark constructor
-        */
-        RandGen();
 
         /**
-         * @overload
+         * @name set_state
          * @param _seed Initial seed of the generator
          * @brief
          * * Sets the initial state of the generator
         */
-        _CUDA_DECOR_ void set_state(unsigned int _seed);
+        _DEVICE_ void set_state(unsigned int _seed);
 
         /**
          * 
@@ -48,7 +51,7 @@ class RandGen {
          * @brief
          * * Calculates a random in the raqnge of [0, 1]
         */
-        _CUDA_DECOR_ double rand_uniform();
+        _DEVICE_ double rand_uniform();
 
         /**
          * @name rand_uniform
@@ -57,7 +60,7 @@ class RandGen {
          * @brief
          * * Calculates a random in the range of [start, end]
         */
-        _CUDA_DECOR_ double rand_uniform(double start, double end);
+        _DEVICE_ double rand_uniform(double start, double end);
 
 };
 

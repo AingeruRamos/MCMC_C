@@ -6,6 +6,4 @@ README > Update for the new version / Continue improving
 
 # General =====================================================================
 
-Run performance tests in main.cpp
-
 Create the CUDA Version of MCMC_C (in main_cuda.cpp)

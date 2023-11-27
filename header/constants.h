@@ -17,8 +17,12 @@
 // CUDA DECORATOR
 #ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
 #   define _CUDA_DECOR_ __host__ __device__
+#   define _DEVICE_ __device__
+#   define _HOST_ __host__
 #else
 #   define _CUDA_DECOR_
+#   define _DEVICE_
+#   define _HOST_
 #endif
 
 // SIMULATION CONSTANTS

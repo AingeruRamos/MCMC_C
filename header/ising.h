@@ -103,14 +103,14 @@ class SpinGlass {
          * @brief
          * * Initializes the replica
         */
-        _CUDA_DECOR_ void init();
+        _DEVICE_ void init();
 
         /**
          * @name trial
          * @brief
          * * Generates a trial of the replica
         */
-        _CUDA_DECOR_ void trial();
+        _DEVICE_ void trial();
 
         /**
          * @name delta
@@ -119,21 +119,21 @@ class SpinGlass {
          * @brief
          * * Calculates the effect of acceptance of the trial
         */
-        _CUDA_DECOR_ double delta();
+        _DEVICE_ double delta();
 
         /**
          * @name move
          * @brief
          * * Applies the trial to the replica
         */
-        _CUDA_DECOR_ void move();
+        _DEVICE_ void move();
 
         /**
          * @name save
          * @brief
          * * Save the state of the replica
         */
-        _CUDA_DECOR_ void save();
+        _DEVICE_ void save();
 };
 
 /**
@@ -148,7 +148,7 @@ class SpinGlass {
  * @brief
  * * Return 1 if index is inside the matrix, else 0
 */
-_CUDA_DECOR_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col);
+_DEVICE_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col);
 
 /**
  * @name single_convolve
@@ -165,7 +165,7 @@ _CUDA_DECOR_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, in
  * The kernel size is assumed to be (kernel_size x kernel_size). 
  * Those values that, when applying the kernel, are outside the matrix, it will assumed the value 0 
 */
-_CUDA_DECOR_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
+_DEVICE_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
 
 
 #define MODEL_NAME SpinGlass

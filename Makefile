@@ -12,9 +12,9 @@ prueba:
 # NVIDIA COMPILATIONS
 
 main_cu:
-	priscilla exec nvcc main.cu $(CPP_FILES) -o main_cu -lcurand
+	priscilla exec nvcc -x cu main.cu $(CPP_FILES) -lcurand -o main_cu -rdc=true
 
 prueba_cu:
-	priscilla exec nvcc prueba.cu -o prueba_cu
+	priscilla exec nvcc -x cu prueba.cu -o prueba_cu -lcurand -o prueba -rdc=true
 
 #######################

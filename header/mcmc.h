@@ -57,7 +57,7 @@ class Swap {
  * This function is a template. T is the type of replica to use
 */
 template <typename T>
-_CUDA_DECOR_ void MCMC_iteration(T* replica, double temp) {
+_DEVICE_ void MCMC_iteration(T* replica, double temp) {
 
     // Get a trial
     replica->trial();
