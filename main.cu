@@ -34,7 +34,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 //-----------------------------------------------------------------------------|
 
 __global__ void cuda_init_replicas(SpinGlass* device_replicas, int* device_rands) {
-    int replica_id = 0; //* <<<<<<
+    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
     int initial_rand_state = device_rands[replica_id];
 
     device_replicas[replica_id]._rand_gen.set_state(initial_rand_state);
@@ -42,12 +42,12 @@ __global__ void cuda_init_replicas(SpinGlass* device_replicas, int* device_rands
 }
 
 __global__ void cuda_init_temps(double* device_temps) {
-    int replica_id = 0; //* <<<<<<
+    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
     device_temps[replica_id] = INIT_TEMP+(replica_id*TEMP_STEP);
 }
 
 __global__ void cuda_run(SpinGlass* device_replicas, double* device_temps) {
-    int replica_id = 0; //* <<<<<<
+    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
     SpinGlass* sp = &device_replicas[replica_id];
     double temp = device_temps[replica_id];
 
@@ -56,15 +56,19 @@ __global__ void cuda_run(SpinGlass* device_replicas, double* device_temps) {
     }
 }
 
-__global__ void cuda_print(SpinGlass* device_replicas) {
-    int replica_id = 0; //* <<<<<<
+__global__ void cuda_print(SpinGlass* device_replicas, int replica_id) {
     SpinGlass* sp = &device_replicas[replica_id];
 
-    SpinGlassIterationResult* sp_it;
     for(int i=0; i<N_ITERATIONS; i++) {
-        sp_it = sp->_results.get(i);
-        printf("%d ", sp_it->_average_spin);
+        SpinGlassIterationResult* sp_it = sp->_results.get(i);
+        printf("%f,", sp_it->_energy);
     }
+    printf("\n");
+    for(int i=0; i<N_ITERATIONS; i++) {
+        SpinGlassIterationResult* sp_it = sp->_results.get(i);
+        printf("%d,", sp_it->_average_spin);
+    }
+    printf("\n");
 }
 
 //-----------------------------------------------------------------------------|
@@ -84,53 +88,79 @@ int main(int argc, char** argv) {
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
+
     int* host_rands = (int*) malloc(1*sizeof(int));
     host_rands[0] = rand();
 
     int* device_rands;
-    _CUDA(cudaMalloc((void**)&device_rands, 1*sizeof(int)));
+    _CUDA(cudaMalloc((void**)&device_rands, TOTAL_REPLICAS*sizeof(int)));
     _CUDA(cudaMemcpy(device_rands, host_rands, sizeof(int), cudaMemcpyHostToDevice))
 
     SpinGlass* device_replicas;
-    _CUDA(cudaMalloc((void**)&device_replicas, 1*sizeof(SpinGlass)));
-    cuda_init_replicas<<<1,1>>>(device_replicas, device_rands);
+    _CUDA(cudaMalloc((void**)&device_replicas, TOTAL_REPLICAS*sizeof(SpinGlass)));
+    cuda_init_replicas<<<1,TOTAL_REPLICAS>>>(device_replicas, device_rands);
 
     if(DEBUG_FLOW) { printf("Device -> Replicas: OK\n"); }
 
     double* device_temps;
-    _CUDA(cudaMalloc((void**)&device_temps, 1*sizeof(double)));
-    cuda_init_temps<<<1,1>>>(device_temps);
+    _CUDA(cudaMalloc((void**)&device_temps, TOTAL_REPLICAS*sizeof(double)));
+    cuda_init_temps<<<1,TOTAL_REPLICAS>>>(device_temps);
 
     if(DEBUG_FLOW) { printf("Device -> Temps: OK\n"); }
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-    cuda_run<<<1,1>>>(device_replicas, device_temps);
+    cuda_run<<<1,TOTAL_REPLICAS>>>(device_replicas, device_temps);
     if(DEBUG_FLOW) { printf("Device -> Run: OK\n"); }
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
-    // OBTENER LOS RESULTADOS EN EL HOST
-    // Y REORDENARLOS
 
-    Stack<MODEL_ITER*, N_ITERATIONS>* results = (Stack<MODEL_ITER*, N_ITERATIONS>*)
-                                    malloc(1*sizeof(Stack<MODEL_ITER*, N_ITERATIONS>));
+    printf("%d*\n", TOTAL_REPLICAS); // SIMULATION CONSTANTS
+    printf("%d\n", N_ITERATIONS);
+    printf("%d\n", SWAP_ACTIVE);
+    printf("%f,%f,%f,%d\n", INIT_TEMP, END_TEMP, TEMP_STEP, TOTAL_REPLICAS);
 
-    cuda_print<<<1,1>>>(device_replicas);
+    printf("#\n"); // MODEL CONSTANTS
+    
+    printf("%d\n", N_ROW);
+    printf("%d\n", N_COL);
+    printf("%f\n", SPIN_PLUS_PERCENTAGE);
 
-    free(results);
+    printf("#\n");
+
+    // TODO Print Swapping
+
+    printf("#\n"); // TIME
+
+    //printf("%f\n", total_all);
+    //printf("%f\n", total_exec);
+
+    printf("#\n"); // RESULTS
+
+    if(SWAP_ACTIVE) {
+        // TODO Reorder results
+        // TODO Print results
+    } else {
+        for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+            cuda_print<<<1,1>>>(device_replicas, replica_id);
+            cudaDeviceSynchronize();
+            printf("#\n");
+        }
+    }
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
-
-// LIBERAR TODA LA MEMORIA (LA DEL HOST FALTA (EN OPENMP TAMBIEN))
 
     _CUDA(cudaFree(device_replicas));
     _CUDA(cudaFree(device_temps));
 
     return 0;
 }
+
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
 
 void option_enabeler(int argc, char** argv) {
     for(int i=1; i<argc; i++) {
