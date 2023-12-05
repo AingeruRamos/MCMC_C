@@ -40,7 +40,7 @@ class Stack {
          * @name Stack
          * @remark constructor
         */
-        _CUDA_DECOR_ Stack() {
+        _HOST_ _DEVICE_ Stack() {
             n_item = 0;
         }
 
@@ -50,7 +50,7 @@ class Stack {
          * @brief
          * * Push the item into the stack
         */
-        _CUDA_DECOR_ void push(T item) {
+        _HOST_ _DEVICE_ void push(T item) {
             stack[n_item] = item;
             n_item += 1;
         }
@@ -61,7 +61,7 @@ class Stack {
          * @brief
          * * Returns the last item of the stack
         */
-        _CUDA_DECOR_ T top() {
+        _HOST_ _DEVICE_ T top() {
             return stack[n_item-1];
         }
 
@@ -72,7 +72,7 @@ class Stack {
          * @brief
          * * Gets the item in the indicated index
         */
-        _CUDA_DECOR_ T get(int index) {
+        _HOST_ _DEVICE_ T get(int index) {
             return stack[index];
         }
 
@@ -83,7 +83,7 @@ class Stack {
          * @brief
          * * Insert the item in the indicated index
         */
-        _CUDA_DECOR_ void set(T item, int index) {
+        _HOST_ _DEVICE_ void set(T item, int index) {
             stack[index] = item;
         }
 
@@ -92,7 +92,7 @@ class Stack {
          * @return A copy of this stack
          * * Copies this stack
         */
-        _CUDA_DECOR_ Stack<T, N>* copy() {
+        _HOST_ _DEVICE_ Stack<T, N>* copy() {
             Stack<T, N>* stack_pointer = new Stack<T, N>();
             for(int i=0; i<N; i++) {
                 stack_pointer->push(stack[i]->copy());

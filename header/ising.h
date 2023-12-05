@@ -35,7 +35,7 @@ class SpinGlassIterationResult {
          * @name SpinGlassIterationResult
          * @remark constructor
         */
-        _CUDA_DECOR_ SpinGlassIterationResult();
+        _HOST_ _DEVICE_ SpinGlassIterationResult();
 
         /**
          * @name SpinGlassIterationResult
@@ -43,7 +43,7 @@ class SpinGlassIterationResult {
          * @param energy Energy of the model
          * @param average_spin Average spin of the model
         */
-        _CUDA_DECOR_ SpinGlassIterationResult(double energy, double average_spin);
+        _HOST_ _DEVICE_ SpinGlassIterationResult(double energy, double average_spin);
 
         /**
          * @name copy
@@ -51,7 +51,7 @@ class SpinGlassIterationResult {
          * @brief
          * * Creates a copy of this SpinGlassIterationResult
         */
-        _CUDA_DECOR_ SpinGlassIterationResult* copy();
+        _HOST_ _DEVICE_ SpinGlassIterationResult* copy();
 };
 
 /**

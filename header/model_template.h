@@ -29,7 +29,7 @@ class ReplicaIterationResult {
          * @name ReplicaIterationResult
          * @remark constructor
         */
-        _CUDA_DECOR_ ReplicaIterationResult();
+        _HOST_ _DEVICE_ ReplicaIterationResult();
 
         /**
          * @name copy
@@ -37,7 +37,7 @@ class ReplicaIterationResult {
          * @brief 
          * * Creates a copy of this ReplicaIterationResult 
         */
-        _CUDA_DECOR_ ReplicaIterationResult* copy();
+        _HOST_ _DEVICE_ ReplicaIterationResult* copy();
 };
 
 /**
@@ -72,7 +72,7 @@ class Replica {
          * @brief
          * * Initializes the replica
         */
-        _CUDA_DECOR_ void init();
+        _DEVICE_ void init();
 
         /**
          * @name trial
@@ -80,7 +80,7 @@ class Replica {
          * @brief
          * * Generates a trial of the replica
         */
-        _CUDA_DECOR_ void* trial();
+        _DEVICE_ void* trial();
 
         /**
          * @name delta
@@ -90,7 +90,7 @@ class Replica {
          * @brief
          * * Calculate the effect of accept the trial
         */
-        _CUDA_DECOR_ double delta(void* trial);
+        _DEVICE_ double delta(void* trial);
 
         /**
          * @name move
@@ -98,7 +98,7 @@ class Replica {
          * @brief
          * * Apply the trial to the replica
         */
-        _CUDA_DECOR_ void move(void* trial);
+        _DEVICE_ void move(void* trial);
 
         /**
          * @name save
@@ -106,7 +106,7 @@ class Replica {
          * @brief
          * * Save the properties of the replica
         */
-        _CUDA_DECOR_ void save(void* trial);
+        _DEVICE_ void save(void* trial);
 };
 
 // ANY AUXILIARY FUNCTION FOR THE ABOVE METHODS

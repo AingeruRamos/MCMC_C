@@ -21,17 +21,17 @@
 
 // SPIN_GLASS_ITERATION_RESULT DEFS.
 
-SpinGlassIterationResult::SpinGlassIterationResult() {
+_HOST_ _DEVICE_ SpinGlassIterationResult::SpinGlassIterationResult() {
     _energy = 0;
     _average_spin = 0;
 }
 
-SpinGlassIterationResult::SpinGlassIterationResult(double energy, double average_spin) {
+_HOST_ _DEVICE_ SpinGlassIterationResult::SpinGlassIterationResult(double energy, double average_spin) {
     _energy = energy;
     _average_spin = average_spin;
 }
 
-SpinGlassIterationResult* SpinGlassIterationResult::copy() {
+_HOST_ _DEVICE_ SpinGlassIterationResult* SpinGlassIterationResult::copy() {
     return new SpinGlassIterationResult(_energy, _average_spin);
 }
 

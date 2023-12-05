@@ -39,7 +39,7 @@ class Swap {
          * @param sw_cand_1 Index of the first swap candidate
          * @param sw_cand_2 Index of the second swap candidate
         */
-        _CUDA_DECOR_ Swap(int sw_cand_1, int sw_cand_2) {
+        _DEVICE_ Swap(int sw_cand_1, int sw_cand_2) {
             _accepted = false;
             _swap_candidate_1 = sw_cand_1;
             _swap_candidate_2 = sw_cand_2;
@@ -90,7 +90,7 @@ _DEVICE_ void MCMC_iteration(T* replica, double temp) {
  * This function is a template. T is the type of replica to use
 */
 template <typename T>
-_CUDA_DECOR_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
+_DEVICE_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
     int sw_cand_1 = sw->_swap_candidate_1;
     int sw_cand_2 = sw->_swap_candidate_2;
 
