@@ -44,10 +44,14 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Initialazing\n"); }
 
+    Stack<MODEL_ITER*, N_ITERATIONS>* results = (Stack<MODEL_ITER*, N_ITERATIONS>*)
+                    malloc(TOTAL_REPLICAS*sizeof(Stack<MODEL_ITER*, N_ITERATIONS>));
+
     MODEL_NAME* models = (MODEL_NAME*) malloc(TOTAL_REPLICAS*sizeof(MODEL_NAME));
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
         MODEL_NAME* sp = &models[replica_id];
         sp->_rand_gen.set_state(rand());
+        sp->_results = &results[replica_id];
         sp->init();
     }
 
@@ -123,9 +127,13 @@ int main(int argc, char** argv) {
                     if(DEBUG_FLOW) { printf("Swap pre-calculus (%d): OK\n", swap_index); }
 
                     if(rand_gen.rand_uniform() < swap_prob) {
-                        double aux = temps[swap->_swap_candidate_1];
+                        double aux_temp = temps[swap->_swap_candidate_1];
                         temps[swap->_swap_candidate_1] = temps[swap->_swap_candidate_2];
-                        temps[swap->_swap_candidate_2] = aux;
+                        temps[swap->_swap_candidate_2] = aux_temp;
+
+                        Stack<MODEL_ITER*, N_ITERATIONS>* aux_results = models[swap->_swap_candidate_1]._results;
+                        models[swap->_swap_candidate_1]._results = models[swap->_swap_candidate_2]._results;
+                        models[swap->_swap_candidate_2]._results = aux_results;
                         swap->_accepted = true;
                     }
                 }
@@ -139,52 +147,6 @@ int main(int argc, char** argv) {
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
-
-    if(DEBUG_FLOW) { printf("Reordering\n"); }
-
-    Stack<MODEL_ITER*, N_ITERATIONS>** results_copy = (Stack<MODEL_ITER*, N_ITERATIONS>**)
-                            malloc(TOTAL_REPLICAS*sizeof(Stack<MODEL_ITER*, N_ITERATIONS>*));
-
-    if(SWAP_ACTIVE) {
-
-        for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-            results_copy[replica_id] = models[replica_id]._results.copy();
-        }
-
-        int* swap_replica_ids = (int*) malloc(TOTAL_REPLICAS*sizeof(int));
-        for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-            swap_replica_ids[replica_id] = replica_id;
-        }
-
-        #pragma omp parallel
-        {
-            int tid = omp_get_thread_num();
-
-            for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
-
-                //? Search a way to do in parallel
-                for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-                    int swap_replica_id = swap_replica_ids[replica_id];
-                    models[replica_id]._results.set(results_copy[swap_replica_id]->get(iteration), iteration);
-                }
-
-                #pragma omp barrier
-
-                if(iteration != 0) {
-                    for(int swap_index=tid; swap_index<n_swaps[iteration-1]; swap_index+=N_THREADS) {
-                        Swap* sw = swap_planning[iteration-1][swap_index];
-                        if(sw->_accepted) {
-                            int aux = swap_replica_ids[sw->_swap_candidate_1];
-                            swap_replica_ids[sw->_swap_candidate_1] = swap_replica_ids[sw->_swap_candidate_2];
-                            swap_replica_ids[sw->_swap_candidate_2] = aux;
-                        }
-                    }
-                }
-
-                #pragma omp barrier
-            }
-        }
-    }
 
     time_t end_all = omp_get_wtime();
 
@@ -234,7 +196,7 @@ int main(int argc, char** argv) {
     //printf("#\n");
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        print_stack(&models[replica_id]._results);
+        print_stack(models[replica_id]._results);
         printf("#\n");
     }
 

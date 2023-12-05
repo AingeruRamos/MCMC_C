@@ -1,7 +1,5 @@
 # Files =======================================================================
 
-main.cpp; Line 163 >? Search a way to do in parallel
-
 main.cu; Line 133 >TODO Print Swapping
 main.cu; Line 143 >TODO Reorder results
 main.cu; Line 144 >TODO Print results

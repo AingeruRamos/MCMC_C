@@ -96,8 +96,8 @@ _DEVICE_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
 
     // Get the evals
     double evals[2];
-    evals[0] = replicas[sw_cand_1]._results.top()->_energy;
-    evals[1] = replicas[sw_cand_2]._results.top()->_energy;
+    evals[0] = replicas[sw_cand_1]._results->top()->_energy;
+    evals[1] = replicas[sw_cand_2]._results->top()->_energy;
 
     // Calculate the swap probability
     double temp_diff = (1/temps[sw_cand_2])-(1/temps[sw_cand_1]);

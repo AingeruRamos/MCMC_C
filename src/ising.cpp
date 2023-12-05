@@ -70,7 +70,7 @@ _DEVICE_ void SpinGlass::init() {
         sp_it->_average_spin += (int) _sample[index];
     }
     
-    _results.push(sp_it);
+    _results->push(sp_it);
 }
 
 _DEVICE_ void SpinGlass::trial() {
@@ -94,7 +94,7 @@ _DEVICE_ void SpinGlass::move() {
 }
 
 _DEVICE_ void SpinGlass::save() {
-    SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results.top();
+    SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results->top();
     SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) sp_last_it->copy();
 
     if(_trial._accepted) { //* If trial has been accepted
@@ -102,7 +102,7 @@ _DEVICE_ void SpinGlass::save() {
         sp_it->_average_spin -= 2*_last_spin;
     }
 
-    _results.push(sp_it);
+    _results->push(sp_it);
 }
 
 //

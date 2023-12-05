@@ -88,7 +88,7 @@ class SpinGlass {
     public:
         RandGen _rand_gen;
         SpinGlassTrial _trial;
-        Stack<SpinGlassIterationResult*, N_ITERATIONS> _results;
+        Stack<SpinGlassIterationResult*, N_ITERATIONS>* _results;
         
         int _kernel_cross[9];
         int _kernel_semicross[9];
