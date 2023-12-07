@@ -61,8 +61,8 @@ class Stack {
          * @brief
          * * Returns the last item of the stack
         */
-        _HOST_ _DEVICE_ T top() {
-            return stack[n_item-1];
+        _HOST_ _DEVICE_ T* top() {
+            return &stack[n_item-1];
         }
 
         /**
@@ -72,8 +72,8 @@ class Stack {
          * @brief
          * * Gets the item in the indicated index
         */
-        _HOST_ _DEVICE_ T get(int index) {
-            return stack[index];
+        _HOST_ _DEVICE_ T* get(int index) {
+            return &stack[index];
         }
 
         /**

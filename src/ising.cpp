@@ -62,12 +62,12 @@ _DEVICE_ void SpinGlass::init() {
     _last_spin = 0;
 
     // Calculate initial iteration
-    SpinGlassIterationResult* sp_it = new SpinGlassIterationResult();
+    SpinGlassIterationResult sp_it;
 
     /// Calculate initial energy and average spin
     for(int index=0; index<(N_ROW*N_COL); index++) {
-        sp_it->_energy += (double) apply_kernel(_sample, N_ROW, N_COL, index, _kernel_semicross, 3);
-        sp_it->_average_spin += (int) _sample[index];
+        sp_it._energy += (double) apply_kernel(_sample, N_ROW, N_COL, index, _kernel_semicross, 3);
+        sp_it._average_spin += (int) _sample[index];
     }
     
     _results->push(sp_it);
@@ -95,11 +95,13 @@ _DEVICE_ void SpinGlass::move() {
 
 _DEVICE_ void SpinGlass::save() {
     SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results->top();
-    SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) sp_last_it->copy();
+    SpinGlassIterationResult sp_it;
+    sp_it._energy = sp_last_it->_energy;
+    sp_it._average_spin = sp_last_it->_average_spin;
 
     if(_trial._accepted) { //* If trial has been accepted
-        sp_it->_energy += _last_delta;
-        sp_it->_average_spin -= 2*_last_spin;
+        sp_it._energy += _last_delta;
+        sp_it._average_spin -= 2*_last_spin;
     }
 
     _results->push(sp_it);
