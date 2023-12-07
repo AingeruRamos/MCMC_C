@@ -36,22 +36,6 @@ class SpinGlassIterationResult {
          * @remark constructor
         */
         _HOST_ _DEVICE_ SpinGlassIterationResult();
-
-        /**
-         * @name SpinGlassIterationResult
-         * @overload
-         * @param energy Energy of the model
-         * @param average_spin Average spin of the model
-        */
-        _HOST_ _DEVICE_ SpinGlassIterationResult(double energy, double average_spin);
-
-        /**
-         * @name copy
-         * @return Copy of this SpinGlassIterationResult
-         * @brief
-         * * Creates a copy of this SpinGlassIterationResult
-        */
-        _HOST_ _DEVICE_ SpinGlassIterationResult* copy();
 };
 
 /**

@@ -75,30 +75,6 @@ class Stack {
         _HOST_ _DEVICE_ T* get(int index) {
             return &stack[index];
         }
-
-        /**
-         * @name set
-         * @param item The item to insert
-         * @param index Index where insert
-         * @brief
-         * * Insert the item in the indicated index
-        */
-        _HOST_ _DEVICE_ void set(T item, int index) {
-            stack[index] = item;
-        }
-
-        /**
-         * @name copy
-         * @return A copy of this stack
-         * * Copies this stack
-        */
-        _HOST_ _DEVICE_ Stack<T, N>* copy() {
-            Stack<T, N>* stack_pointer = new Stack<T, N>();
-            for(int i=0; i<N; i++) {
-                stack_pointer->push(stack[i]->copy());
-            }
-            return stack_pointer;
-        }
 };
 
 #endif
