@@ -30,14 +30,6 @@ class ReplicaIterationResult {
          * @remark constructor
         */
         _HOST_ _DEVICE_ ReplicaIterationResult();
-
-        /**
-         * @name copy
-         * @return Copy of this ReplicaIterationResult
-         * @brief 
-         * * Creates a copy of this ReplicaIterationResult 
-        */
-        _HOST_ _DEVICE_ ReplicaIterationResult* copy();
 };
 
 /**
@@ -65,7 +57,7 @@ class Replica {
     public:
         RandGen _rand_gen;
         SpinGlassTrial _trial;
-        Stack<ReplicaIterationResult*, N_ITERATIONS> _results;
+        Stack<ReplicaIterationResult, N_ITERATIONS> _results;
 
         /**
          * @name init
@@ -113,5 +105,6 @@ class Replica {
 
 #define MODEL_NAME Replica
 #define MODEL_ITER ReplicaIterationResult
+#define MODEL_RESULTS Stack<ReplicaIterationResult, N_ITERATIONS>
 
 #endif
