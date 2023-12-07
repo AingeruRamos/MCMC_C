@@ -24,7 +24,7 @@
 #include "../header/stack.h"
 
 void option_enabeler(int argc, char** argv);
-void print_stack(Stack<MODEL_ITER, N_ITERATIONS>* stack);
+void print_stack(MODEL_RESULTS* stack);
 
 int DEBUG_FLOW = 0;
 int DEBUG_RESULTS = 0;
@@ -44,8 +44,7 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Initialazing\n"); }
 
-    Stack<MODEL_ITER, N_ITERATIONS>* results = (Stack<MODEL_ITER, N_ITERATIONS>*)
-                    malloc(TOTAL_REPLICAS*sizeof(Stack<MODEL_ITER, N_ITERATIONS>));
+    MODEL_RESULTS* results = (MODEL_RESULTS*) malloc(TOTAL_REPLICAS*sizeof(MODEL_RESULTS));
 
     MODEL_NAME* models = (MODEL_NAME*) malloc(TOTAL_REPLICAS*sizeof(MODEL_NAME));
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
@@ -131,7 +130,7 @@ int main(int argc, char** argv) {
                         temps[swap->_swap_candidate_1] = temps[swap->_swap_candidate_2];
                         temps[swap->_swap_candidate_2] = aux_temp;
 
-                        Stack<MODEL_ITER, N_ITERATIONS>* aux_results = models[swap->_swap_candidate_1]._results;
+                        MODEL_RESULTS* aux_results = models[swap->_swap_candidate_1]._results;
                         models[swap->_swap_candidate_1]._results = models[swap->_swap_candidate_2]._results;
                         models[swap->_swap_candidate_2]._results = aux_results;
                         swap->_accepted = true;
@@ -217,7 +216,7 @@ void option_enabeler(int argc, char** argv) {
     }
 }
 
-void print_stack(Stack<MODEL_ITER, N_ITERATIONS>* stack) {
+void print_stack(MODEL_RESULTS* stack) {
     for(int i=0; i<N_ITERATIONS; i++) {
         MODEL_ITER* sp_it = (MODEL_ITER*) stack->get(i);
         printf("%f,", sp_it->_energy);

@@ -154,5 +154,6 @@ _DEVICE_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kerne
 
 #define MODEL_NAME SpinGlass
 #define MODEL_ITER SpinGlassIterationResult
+#define MODEL_RESULTS Stack<SpinGlassIterationResult, N_ITERATIONS>
 
 #endif
