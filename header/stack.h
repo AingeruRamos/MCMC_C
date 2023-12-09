@@ -75,6 +75,10 @@ class Stack {
         _HOST_ _DEVICE_ T* get(int index) {
             return &stack[index];
         }
+
+        _HOST_ _DEVICE_ void clean() {
+            n_item = 0;
+        }
 };
 
 #endif
