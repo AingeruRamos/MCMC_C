@@ -16,9 +16,9 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-#include "./header/constants.h"
-#include "./header/ising.h"
-#include "./header/mcmc.h"
+#include "../header/constants.h"
+#include "../header/ising.h"
+#include "../header/mcmc.h"
 
 #define _CUDA(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
