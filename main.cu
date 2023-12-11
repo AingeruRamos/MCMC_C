@@ -104,16 +104,16 @@ __global__ void cuda_run_swaps(SpinGlass* device_replicas, double* device_temps,
     }
 }
 
-__global__ void cuda_print(SpinGlass* device_replicas, int replica_id) {
-    SpinGlass* sp = &device_replicas[replica_id];
+__global__ void cuda_print(MODEL_RESULTS* device_results, int replica_id) {
+    MODEL_RESULTS* results = &device_results[replica_id];
 
     for(int i=0; i<N_ITERATIONS; i++) {
-        SpinGlassIterationResult* sp_it = sp->_results->get(i);
+        SpinGlassIterationResult* sp_it = results->get(i);
         printf("%f,", sp_it->_energy);
     }
     printf("\n");
     for(int i=0; i<N_ITERATIONS; i++) {
-        SpinGlassIterationResult* sp_it = sp->_results->get(i);
+        SpinGlassIterationResult* sp_it = results->get(i);
         printf("%d,", sp_it->_average_spin);
     }
     printf("\n");
@@ -163,13 +163,17 @@ int main(int argc, char** argv) {
     if(DEBUG_FLOW) { printf("Device -> Temps: OK\n"); }
 
     int* device_n_swaps;
-    _CUDA(cudaMalloc((void**)&device_n_swaps, N_ITERATIONS*sizeof(int)));
-    cuda_init_n_swaps<<<1,1>>>(device_n_swaps);
+    if(SWAP_ACTIVE) {
+        _CUDA(cudaMalloc((void**)&device_n_swaps, N_ITERATIONS*sizeof(int)));
+        cuda_init_n_swaps<<<1,1>>>(device_n_swaps);
+    }
 
     Swap*** device_swap_planning;
-    _CUDA(cudaMalloc((void**)&device_swap_planning, N_ITERATIONS*sizeof(Swap**)));
-    cuda_init_swap_planning<<<1,1>>>(device_swap_planning, device_n_swaps);
-
+    if(SWAP_ACTIVE) {
+        _CUDA(cudaMalloc((void**)&device_swap_planning, N_ITERATIONS*sizeof(Swap**)));
+        cuda_init_swap_planning<<<1,1>>>(device_swap_planning, device_n_swaps);
+    }
+    
     if(DEBUG_FLOW) { printf("Device -> Swaps: OK\n"); }
 
 //-----------------------------------------------------------------------------|
@@ -177,7 +181,9 @@ int main(int argc, char** argv) {
 
     for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
         cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
-        cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, device_n_swaps, device_swap_planning, iteration);
+        if(SWAP_ACTIVE) {
+            cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, device_n_swaps, device_swap_planning, iteration);
+        }
     }
 
     if(DEBUG_FLOW) { printf("Device -> Run: OK\n"); }
@@ -208,7 +214,7 @@ int main(int argc, char** argv) {
     printf("#\n"); // RESULTS
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-            cuda_print<<<1,1>>>(device_replicas, replica_id);
+            cuda_print<<<1,1>>>(device_results, replica_id);
             cudaDeviceSynchronize();
             printf("#\n");
     }
