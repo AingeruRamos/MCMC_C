@@ -8,5 +8,4 @@ README > Update for the new version / Continue improving
 
 # General =====================================================================
 
-Generalize main.cu code for any given model
 Improve memory managment in CUDA version. Batching in results array.
