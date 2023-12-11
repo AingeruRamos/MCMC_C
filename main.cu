@@ -126,7 +126,6 @@ void option_enabeler(int argc, char** argv);
 
 int DEBUG_FLOW = 0;
 int DEBUG_RESULTS = 0;
-int N_THREADS = 1;
 
 int main(int argc, char** argv) {
 
@@ -137,8 +136,8 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-    int BLOCK_NUM = (TOTAL_REPLICAS)/1024; //* 1024 is the number of thread per block
-    int THREAD_NUM = (TOTAL_REPLICAS)%1024;
+    int NUM_BLOCKS = (TOTAL_REPLICAS)/1024; //* 1024 is the number of thread per block
+    int NUM_THREADS = (TOTAL_REPLICAS)%1024;
 
     int* device_rands;
     _CUDA(cudaMalloc((void**)&device_rands, TOTAL_REPLICAS*sizeof(int)));
@@ -147,19 +146,19 @@ int main(int argc, char** argv) {
 
     MODEL_RESULTS* device_results;
     _CUDA(cudaMalloc((void**)&device_results, TOTAL_REPLICAS*sizeof(MODEL_RESULTS)));
-    cuda_init_results<<<BLOCK_NUM, THREAD_NUM>>>(device_results);
+    cuda_init_results<<<NUM_BLOCKS, NUM_THREADS>>>(device_results);
 
     if(DEBUG_FLOW) { printf("Device -> Results: OK\n"); }
 
     SpinGlass* device_replicas;
     _CUDA(cudaMalloc((void**)&device_replicas, TOTAL_REPLICAS*sizeof(SpinGlass)));
-    cuda_init_replicas<<<BLOCK_NUM, THREAD_NUM>>>(device_replicas, device_rands, device_results);
+    cuda_init_replicas<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_rands, device_results);
 
     if(DEBUG_FLOW) { printf("Device -> Replicas: OK\n"); }
 
     double* device_temps;
     _CUDA(cudaMalloc((void**)&device_temps, TOTAL_REPLICAS*sizeof(double)));
-    cuda_init_temps<<<BLOCK_NUM, THREAD_NUM>>>(device_temps);
+    cuda_init_temps<<<NUM_BLOCKS, NUM_THREADS>>>(device_temps);
 
     if(DEBUG_FLOW) { printf("Device -> Temps: OK\n"); }
 
@@ -177,8 +176,8 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 
     for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
-        cuda_run_iteration<<<BLOCK_NUM, THREAD_NUM>>>(device_replicas, device_temps);
-        cuda_run_swaps<<<BLOCK_NUM, THREAD_NUM>>>(device_replicas, device_temps, device_n_swaps, device_swap_planning, iteration);
+        cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
+        cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, device_n_swaps, device_swap_planning, iteration);
     }
 
     if(DEBUG_FLOW) { printf("Device -> Run: OK\n"); }
