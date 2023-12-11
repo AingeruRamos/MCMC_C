@@ -167,6 +167,8 @@ int main(int argc, char** argv) {
     printf("%f\n", SPIN_PLUS_PERCENTAGE);
 
     printf("#\n");
+
+    //TODO Uncomment
     /*
     for(int i=0; i<N_ITERATIONS; i++) { // SWAP PLANNING (ACCEPTED)
         for(int j=0; j<n_swaps[i]; j++) {
@@ -189,6 +191,15 @@ int main(int argc, char** argv) {
         print_stack(models[replica_id]._results);
         printf("#\n");
     }
+
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
+    free(results);
+    free(models);
+    free(temps);
+    free(n_swaps);
+    free(swap_planning); //TODO Improve "swap_planning" memory free
 
     return 0;
 }

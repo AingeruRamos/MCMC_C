@@ -1,10 +1,12 @@
 # Files =======================================================================
 
-main.cu; Line 133 >TODO Print Swapping
+main.cu; Line 171 >TODO Uncomment
+main.cu; Line 202 >TODO Improve "swap_planning" memory free
+main.cu; Line 207 >TODO Print Swapping
 
 README > Update for the new version / Continue improving
 
 # General =====================================================================
 
-Free the memory dynamically created in main.cpp
 Generalize main.cu code for any given model
+Improve memory managment in CUDA version. Batching in results array.
