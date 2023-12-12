@@ -84,18 +84,7 @@ __global__ void cuda_print_swaps(int* device_n_swaps, Swap*** device_swap_planni
 }
 
 __global__ void cuda_print(MODEL_RESULTS* device_results, int replica_id) {
-    MODEL_RESULTS* results = &device_results[replica_id];
-
-    for(int i=0; i<N_ITERATIONS; i++) {
-        MODEL_ITER* sp_it = results->get(i);
-        printf("%f,", sp_it->_energy);
-    }
-    printf("\n");
-    for(int i=0; i<N_ITERATIONS; i++) {
-        MODEL_ITER* sp_it = results->get(i);
-        printf("%d,", sp_it->_average_spin);
-    }
-    printf("\n");
+    print_result(&device_results[replica_id]);
 }
 
 //-----------------------------------------------------------------------------|

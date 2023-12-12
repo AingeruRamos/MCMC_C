@@ -24,7 +24,6 @@
 #include "../header/stack.h"
 
 void option_enabeler(int argc, char** argv);
-void print_stack(MODEL_RESULTS* stack);
 
 int DEBUG_FLOW = 0;
 int N_THREADS = 1;
@@ -173,7 +172,7 @@ int main(int argc, char** argv) {
     printf("#\n"); // RESULTS
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        print_stack(replicas[replica_id]._results);
+        print_result(&results[replica_id]);
         printf("#\n");
     }
 
@@ -204,17 +203,4 @@ void option_enabeler(int argc, char** argv) {
             continue;
         }
     }
-}
-
-void print_stack(MODEL_RESULTS* stack) {
-    for(int i=0; i<N_ITERATIONS; i++) {
-        MODEL_ITER* sp_it = (MODEL_ITER*) stack->get(i);
-        printf("%f,", sp_it->_energy);
-    }
-    printf("\n");
-    for(int i=0; i<N_ITERATIONS; i++) {
-        MODEL_ITER* sp_it = (MODEL_ITER*) stack->get(i);
-        printf("%d,", sp_it->_average_spin);
-    }
-    printf("\n");
 }

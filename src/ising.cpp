@@ -26,6 +26,21 @@ _HOST_ _DEVICE_ SpinGlassIterationResult::SpinGlassIterationResult() {
     _average_spin = 0;
 }
 
+// SPIN_GLASS_RESULT PRINT DEF.
+
+_DEVICE_ void print_result(Stack<SpinGlassIterationResult, N_ITERATIONS>* results) {
+    for(int i=0; i<N_ITERATIONS; i++) {
+        SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) results->get(i);
+        printf("%f,", sp_it->_energy);
+    }
+    printf("\n");
+    for(int i=0; i<N_ITERATIONS; i++) {
+        SpinGlassIterationResult* sp_it = (SpinGlassIterationResult*) results->get(i);
+        printf("%d,", sp_it->_average_spin);
+    }
+    printf("\n");
+}
+
 // SPIN_GLASS DEFS.
 
 _DEVICE_ void SpinGlass::init() {

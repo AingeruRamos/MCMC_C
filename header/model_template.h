@@ -32,6 +32,8 @@ class ReplicaIterationResult {
         _HOST_ _DEVICE_ ReplicaIterationResult();
 };
 
+_DEVICE_ void print_result(Stack<ReplicaIterationResult, N_ITERATIONS>* result);
+
 /**
  * @class ReplicaTrial
  * @param _accepted If the trial is accepted

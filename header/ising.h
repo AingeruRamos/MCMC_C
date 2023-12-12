@@ -38,6 +38,8 @@ class SpinGlassIterationResult {
         _HOST_ _DEVICE_ SpinGlassIterationResult();
 };
 
+_DEVICE_ void print_result(Stack<SpinGlassIterationResult, N_ITERATIONS>* result);
+
 /**
  * @class SpinGlassTrial
  * @param _accepted If the trial is accepted
