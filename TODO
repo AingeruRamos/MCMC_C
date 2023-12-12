@@ -1,6 +1,7 @@
 # Files =======================================================================
 
-main.cu; Line 202 >TODO Improve "swap_planning" memory free
+main.cpp; Line 189 >TODO Improve "swap_planning" memory free
+main.cu; Line 229 >TODO Improve "swap_planning" memory free
 
 README > Update for the new version / Continue improving
 

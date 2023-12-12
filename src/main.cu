@@ -104,7 +104,6 @@ __global__ void cuda_print(MODEL_RESULTS* device_results, int replica_id) {
 void option_enabeler(int argc, char** argv);
 
 int DEBUG_FLOW = 0;
-int DEBUG_RESULTS = 0;
 
 int main(int argc, char** argv) {
 
@@ -200,8 +199,7 @@ int main(int argc, char** argv) {
 
     printf("#\n");
 
-    // SWAP PLANNING (ACCEPTED)
-    if(SWAP_ACTIVE) {
+    if(SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         cuda_print_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
         cudaDeviceSynchronize();
     }
@@ -228,7 +226,7 @@ int main(int argc, char** argv) {
 
     if(SWAP_ACTIVE) {
         _CUDA(cudaFree(device_n_swaps));
-        _CUDA(cudaFree(device_swap_planning));
+        _CUDA(cudaFree(device_swap_planning)); //TODO Improve "swap_planning" memory free
     }
 
     return 0;
@@ -243,9 +241,6 @@ void option_enabeler(int argc, char** argv) {
         if(strcmp(argv[i], "-df") == 0) {
             DEBUG_FLOW = 1;
             continue;
-        } else if(strcmp(argv[i], "-dr") == 0) {
-            DEBUG_RESULTS = 1;
-            continue;
-        } 
+        }
     }
 }

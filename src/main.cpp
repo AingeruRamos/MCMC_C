@@ -27,7 +27,6 @@ void option_enabeler(int argc, char** argv);
 void print_stack(MODEL_RESULTS* stack);
 
 int DEBUG_FLOW = 0;
-int DEBUG_RESULTS = 0;
 int N_THREADS = 1;
 
 int main(int argc, char** argv) {
@@ -162,7 +161,7 @@ int main(int argc, char** argv) {
 
     printf("#\n");
 
-    if(SWAP_ACTIVE) {
+    if(SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         print_swaps(n_swaps, swap_planning);
     }
 
@@ -193,15 +192,15 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
 void option_enabeler(int argc, char** argv) {
     for(int i=1; i<argc; i++) {
 
         char* option_string = argv[1];
         if(strcmp(argv[i], "-df") == 0) {
             DEBUG_FLOW = 1;
-            continue;
-        } else if(strcmp(argv[i], "-dr") == 0) {
-            DEBUG_RESULTS = 1;
             continue;
         }
     }
