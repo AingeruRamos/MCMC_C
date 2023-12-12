@@ -168,18 +168,18 @@ int main(int argc, char** argv) {
 
     printf("#\n");
 
-    //TODO Uncomment
-    /*
-    for(int i=0; i<N_ITERATIONS; i++) { // SWAP PLANNING (ACCEPTED)
-        for(int j=0; j<n_swaps[i]; j++) {
-            Swap* sw = swap_planning[i][j];
-            if(sw->_accepted) {
-                printf("%d-%d,", sw->_swap_candidate_1, sw->_swap_candidate_2);
+    if(SWAP_ACTIVE) {
+        for(int i=0; i<N_ITERATIONS; i++) { // SWAP PLANNING (ACCEPTED)
+            for(int j=0; j<n_swaps[i]; j++) {
+                Swap* sw = swap_planning[i][j];
+                if(sw->_accepted) {
+                    printf("%d-%d,", sw->_swap_candidate_1, sw->_swap_candidate_2);
+                }
             }
+            printf("\n");
         }
-        printf("\n");
     }
-    */
+
     printf("#\n"); // TIME
 
     printf("%f\n", total_all);
