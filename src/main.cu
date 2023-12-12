@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
 
     time_t begin_all = time(NULL);
 
-    int NUM_BLOCKS = (TOTAL_REPLICAS)/1024; //* 1024 is the number of thread per block
+    int NUM_BLOCKS = ((TOTAL_REPLICAS)/1024)+1; //* 1024 is the number of thread per block
     int NUM_THREADS = (TOTAL_REPLICAS)%1024;
 
     int* device_rands;
@@ -235,10 +235,14 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 
     _CUDA(cudaFree(device_rands));
+    _CUDA(cudaFree(device_results));
     _CUDA(cudaFree(device_replicas));
     _CUDA(cudaFree(device_temps));
-    _CUDA(cudaFree(device_n_swaps));
-    _CUDA(cudaFree(device_swap_planning));
+
+    if(SWAP_ACTIVE) {
+        _CUDA(cudaFree(device_n_swaps));
+        _CUDA(cudaFree(device_swap_planning));
+    }
 
     return 0;
 }
