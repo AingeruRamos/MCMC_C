@@ -32,61 +32,55 @@ int N_THREADS = 1;
 
 int main(int argc, char** argv) {
 
-    time_t begin_all = omp_get_wtime();
+    srand(time(NULL));
 
     option_enabeler(argc, argv);
 
-    srand(time(NULL));
+    if(SWAP_ACTIVE && (TOTAL_REPLICAS <= 1)) {
+        printf("ERROR: This program is not valid.\n");
+        return -1;
+    }
+
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
+    time_t begin_all = omp_get_wtime();
+
     RandGen rand_gen;
 
-//-----------------------------------------------------------------------------|
-//-----------------------------------------------------------------------------|
+    int* rands;
+    rands = (int*) malloc(TOTAL_REPLICAS*sizeof(int));
 
-    if(DEBUG_FLOW) { printf("Initialazing\n"); }
+    if(DEBUG_FLOW) { printf("Rands: OK\n"); }
 
-    MODEL_RESULTS* results = (MODEL_RESULTS*) malloc(TOTAL_REPLICAS*sizeof(MODEL_RESULTS));
+    MODEL_RESULTS* results;
+    results = (MODEL_RESULTS*) malloc(TOTAL_REPLICAS*sizeof(MODEL_RESULTS));
+    initialize_results<MODEL_RESULTS>(results);
 
-    MODEL_NAME* models = (MODEL_NAME*) malloc(TOTAL_REPLICAS*sizeof(MODEL_NAME));
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        MODEL_NAME* sp = &models[replica_id];
-        sp->_rand_gen.set_state(rand());
-        sp->_results = &results[replica_id];
-        sp->init();
-    }
+    if(DEBUG_FLOW) { printf("Results: OK\n"); }
+
+    MODEL_NAME* replicas;
+    replicas = (MODEL_NAME*) malloc(TOTAL_REPLICAS*sizeof(MODEL_NAME));
+    initialize_replicas<MODEL_NAME, MODEL_RESULTS>(replicas, rands, results);
+
+    free(rands);
 
     if(DEBUG_FLOW) { printf("Replicas: OK\n"); }
 
-    double* temps = (double*) malloc(TOTAL_REPLICAS*sizeof(double));
-
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        temps[replica_id] = INIT_TEMP+(replica_id*TEMP_STEP);
-    }
+    double* temps;
+    temps = (double*) malloc(TOTAL_REPLICAS*sizeof(double));
+    initialize_temps(temps);
 
     if(DEBUG_FLOW) { printf("Temps: OK\n"); }
 
-    int* n_swaps = (int*) calloc(N_ITERATIONS, sizeof(int));
+    int* n_swaps;
+    Swap*** swap_planning;
 
-    if(TOTAL_REPLICAS > 1) {
-        for(int i=0; i<N_ITERATIONS; i++) {
-            n_swaps[i] = (int) (TOTAL_REPLICAS/2);
-            if((i%2 != 0) && (TOTAL_REPLICAS%2 == 0)) { //* Number of swaps in odd iterations
-                n_swaps[i] -= 1;
-            }
-        }
-    }
+    if(SWAP_ACTIVE) {
+        n_swaps = (int*) calloc(N_ITERATIONS, sizeof(int));
+        swap_planning = (Swap***) malloc(N_ITERATIONS*sizeof(Swap**));
 
-    Swap*** swap_planning = (Swap***) malloc(N_ITERATIONS*sizeof(Swap**));
-
-    for(int i=0; i<N_ITERATIONS; i++) {
-        swap_planning[i] = (Swap**) malloc(n_swaps[i]*sizeof(Swap*));
-
-        int sw_cand_1 = 0; //* Defining the starting point
-        if(i%2 != 0) { sw_cand_1 = 1; }
-
-        for(int j=0; j<n_swaps[i]; j++) {
-            swap_planning[i][j] = new Swap(sw_cand_1, (sw_cand_1+1));
-            sw_cand_1 += 2;
-        }
+        initialize_swaps(n_swaps, swap_planning);
     }
 
     if(DEBUG_FLOW) { printf("Swaps: OK\n"); }
@@ -107,7 +101,7 @@ int main(int argc, char** argv) {
         for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
 
             for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-                MCMC_iteration<MODEL_NAME>(&models[replica_id], temps[replica_id]);
+                MCMC_iteration<MODEL_NAME>(&replicas[replica_id], temps[replica_id]);
                 if(DEBUG_FLOW) { printf("Replica (%d): OK\n", replica_id); }
             }
 
@@ -121,7 +115,7 @@ int main(int argc, char** argv) {
 
                 for(int swap_index=tid; swap_index<n_swaps[iteration-1]; swap_index+=N_THREADS) {
                     Swap* swap = swap_planning[iteration-1][swap_index];
-                    double swap_prob = get_swap_prob<MODEL_NAME>(swap, models, temps);
+                    double swap_prob = get_swap_prob<MODEL_NAME>(swap, replicas, temps);
 
                     if(DEBUG_FLOW) { printf("Swap pre-calculus (%d): OK\n", swap_index); }
 
@@ -130,9 +124,9 @@ int main(int argc, char** argv) {
                         temps[swap->_swap_candidate_1] = temps[swap->_swap_candidate_2];
                         temps[swap->_swap_candidate_2] = aux_temp;
 
-                        MODEL_RESULTS* aux_results = models[swap->_swap_candidate_1]._results;
-                        models[swap->_swap_candidate_1]._results = models[swap->_swap_candidate_2]._results;
-                        models[swap->_swap_candidate_2]._results = aux_results;
+                        MODEL_RESULTS* aux_results = replicas[swap->_swap_candidate_1]._results;
+                        replicas[swap->_swap_candidate_1]._results = replicas[swap->_swap_candidate_2]._results;
+                        replicas[swap->_swap_candidate_2]._results = aux_results;
                         swap->_accepted = true;
                     }
                 }
@@ -169,15 +163,7 @@ int main(int argc, char** argv) {
     printf("#\n");
 
     if(SWAP_ACTIVE) {
-        for(int i=0; i<N_ITERATIONS; i++) { // SWAP PLANNING (ACCEPTED)
-            for(int j=0; j<n_swaps[i]; j++) {
-                Swap* sw = swap_planning[i][j];
-                if(sw->_accepted) {
-                    printf("%d-%d,", sw->_swap_candidate_1, sw->_swap_candidate_2);
-                }
-            }
-            printf("\n");
-        }
+        print_swaps(n_swaps, swap_planning);
     }
 
     printf("#\n"); // TIME
@@ -188,7 +174,7 @@ int main(int argc, char** argv) {
     printf("#\n"); // RESULTS
 
     for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        print_stack(models[replica_id]._results);
+        print_stack(replicas[replica_id]._results);
         printf("#\n");
     }
 
@@ -196,10 +182,13 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 
     free(results);
-    free(models);
+    free(replicas);
     free(temps);
-    free(n_swaps);
-    free(swap_planning); //TODO Improve "swap_planning" memory free
+
+    if(SWAP_ACTIVE) {
+        free(n_swaps);
+        free(swap_planning); //TODO Improve "swap_planning" memory free
+    }
 
     return 0;
 }
@@ -214,7 +203,7 @@ void option_enabeler(int argc, char** argv) {
         } else if(strcmp(argv[i], "-dr") == 0) {
             DEBUG_RESULTS = 1;
             continue;
-        } 
+        }
     }
 }
 

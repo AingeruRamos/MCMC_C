@@ -35,53 +35,27 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 //-----------------------------------------------------------------------------|
 
 __global__ void cuda_init_results(MODEL_RESULTS* device_results) {
-    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
-    device_results[replica_id].clean();
+    initialize_results<MODEL_RESULTS>(device_results);
 }
 
 __global__ void cuda_init_replicas(MODEL_NAME* device_replicas, int* device_rands, MODEL_RESULTS* device_results) {
-    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
-    int initial_rand_state = device_rands[replica_id];
-
-    device_replicas[replica_id]._rand_gen.set_state(initial_rand_state);
-    device_replicas[replica_id]._results = &device_results[replica_id];
-    device_replicas[replica_id].init();
+    initialize_replicas<MODEL_NAME, MODEL_RESULTS>(device_replicas, device_rands, device_results);
 }
 
 __global__ void cuda_init_temps(double* device_temps) {
-    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
-    device_temps[replica_id] = INIT_TEMP+(replica_id*TEMP_STEP);
+    initialize_temps(device_temps);
 }
 
-__global__ void cuda_init_n_swaps(int* device_n_swaps) {
-    for(int i=0; i<N_ITERATIONS; i++) {
-        device_n_swaps[i] = (int) (TOTAL_REPLICAS/2);
-        if((i%2 != 0) && (TOTAL_REPLICAS%2 == 0)) { //* Number of swaps in odd iterations
-            device_n_swaps[i] -= 1;
-        }
-    }
-}
-
-__global__ void cuda_init_swap_planning(Swap*** device_swap_planning, int* device_n_swaps) {
-    for(int i=0; i<N_ITERATIONS; i++) {
-        device_swap_planning[i] = (Swap**) malloc(device_n_swaps[i]*sizeof(Swap*));
-
-        int sw_cand_1 = 0; //* Defining the starting point
-        if(i%2 != 0) { sw_cand_1 = 1; }
-
-        for(int j=0; j<device_n_swaps[i]; j++) {
-            device_swap_planning[i][j] = new Swap(sw_cand_1, (sw_cand_1+1));
-            sw_cand_1 += 2;
-        }
-    }
+__global__ void cuda_init_swaps(int* device_n_swaps, Swap*** device_swap_planning) {
+    initialize_swaps(device_n_swaps, device_swap_planning);
 }
 
 __global__ void cuda_run_iteration(MODEL_NAME* device_replicas, double* device_temps) {
     int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
-    SpinGlass* sp = &device_replicas[replica_id];
+    MODEL_NAME* replica = &device_replicas[replica_id];
     double temp = device_temps[replica_id];
 
-    MCMC_iteration<MODEL_NAME>(sp, temp);
+    MCMC_iteration<MODEL_NAME>(replica, temp);
 }
 
 __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps, int* device_n_swaps, Swap*** device_swap_planning, int iteration) {
@@ -106,15 +80,7 @@ __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps
 }
 
 __global__ void cuda_print_swaps(int* device_n_swaps, Swap*** device_swap_planning) {
-    for(int i=0; i<N_ITERATIONS; i++) { // SWAP PLANNING (ACCEPTED)
-        for(int j=0; j<device_n_swaps[i]; j++) {
-            Swap* sw = device_swap_planning[i][j];
-            if(sw->_accepted) {
-                printf("%d-%d,", sw->_swap_candidate_1, sw->_swap_candidate_2);
-            }
-        }
-        printf("\n");
-    }
+    print_swaps(device_n_swaps, device_swap_planning);
 }
 
 __global__ void cuda_print(MODEL_RESULTS* device_results, int replica_id) {
@@ -161,32 +127,32 @@ int main(int argc, char** argv) {
 
     MODEL_RESULTS* device_results;
     _CUDA(cudaMalloc((void**)&device_results, TOTAL_REPLICAS*sizeof(MODEL_RESULTS)));
-    cuda_init_results<<<NUM_BLOCKS, NUM_THREADS>>>(device_results);
+    cuda_init_results<<<1,1>>>(device_results);
 
     if(DEBUG_FLOW) { printf("Device -> Results: OK\n"); }
 
     MODEL_NAME* device_replicas;
     _CUDA(cudaMalloc((void**)&device_replicas, TOTAL_REPLICAS*sizeof(MODEL_NAME)));
-    cuda_init_replicas<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_rands, device_results);
+    cuda_init_replicas<<<1,1>>>(device_replicas, device_rands, device_results);
+
+    _CUDA(cudaFree(device_rands));
 
     if(DEBUG_FLOW) { printf("Device -> Replicas: OK\n"); }
 
     double* device_temps;
     _CUDA(cudaMalloc((void**)&device_temps, TOTAL_REPLICAS*sizeof(double)));
-    cuda_init_temps<<<NUM_BLOCKS, NUM_THREADS>>>(device_temps);
+    cuda_init_temps<<<1,1>>>(device_temps);
 
     if(DEBUG_FLOW) { printf("Device -> Temps: OK\n"); }
 
     int* device_n_swaps;
+    Swap*** device_swap_planning;
+
     if(SWAP_ACTIVE) {
         _CUDA(cudaMalloc((void**)&device_n_swaps, N_ITERATIONS*sizeof(int)));
-        cuda_init_n_swaps<<<1,1>>>(device_n_swaps);
-    }
-
-    Swap*** device_swap_planning;
-    if(SWAP_ACTIVE) {
         _CUDA(cudaMalloc((void**)&device_swap_planning, N_ITERATIONS*sizeof(Swap**)));
-        cuda_init_swap_planning<<<1,1>>>(device_swap_planning, device_n_swaps);
+
+        cuda_init_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
     }
 
     if(DEBUG_FLOW) { printf("Device -> Swaps: OK\n"); }
@@ -196,8 +162,13 @@ int main(int argc, char** argv) {
 
     time_t begin_exec = time(NULL);
 
+    if(DEBUG_FLOW) { printf("Executing\n"); }
+
     for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
         cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
+
+        if(DEBUG_FLOW) { printf("Replicas: OK\n"); }
+
         if(SWAP_ACTIVE) {
             cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, device_n_swaps, device_swap_planning, iteration);
         }
@@ -205,7 +176,8 @@ int main(int argc, char** argv) {
 
     time_t end_exec = time(NULL);
 
-    if(DEBUG_FLOW) { printf("Device -> Run: OK\n"); }
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
 
     time_t end_all = time(NULL);
 
@@ -250,7 +222,6 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-    _CUDA(cudaFree(device_rands));
     _CUDA(cudaFree(device_results));
     _CUDA(cudaFree(device_replicas));
     _CUDA(cudaFree(device_temps));

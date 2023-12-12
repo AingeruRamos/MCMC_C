@@ -46,6 +46,71 @@ class Swap {
         }
 };
 
+_DEVICE_ void print_swaps(int* n_swaps, Swap*** swap_planning) {
+    for(int i=0; i<N_ITERATIONS; i++) {
+        for(int j=0; j<n_swaps[i]; j++) {
+            Swap* sw = swap_planning[i][j];
+            if(sw->_accepted) {
+                printf("%d-%d,", sw->_swap_candidate_1, sw->_swap_candidate_2);
+            }
+        }
+        printf("\n");
+    }
+}
+
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
+template <typename T>
+_DEVICE_ void initialize_results(T* results) {
+    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+        results[replica_id].clean();
+    }
+}
+
+template <typename T, typename M>
+_DEVICE_ void initialize_replicas(T* replicas, int* rands, M* results) {
+    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+        T* replica = &replicas[replica_id];
+        replica->_rand_gen.set_state(rands[replica_id]);
+        replica->_results = &results[replica_id];
+        replica->init();
+    }
+}
+
+_DEVICE_ void initialize_temps(double* temps) {
+    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+        temps[replica_id] = INIT_TEMP+(replica_id*TEMP_STEP);
+    }
+}
+
+_DEVICE_ void initialize_swaps(int* n_swaps, Swap*** swap_planning) {
+
+    // "n_swaps" initialization
+    for(int i=0; i<N_ITERATIONS; i++) {
+        n_swaps[i] = (int) (TOTAL_REPLICAS/2);
+        if((i%2 != 0) && (TOTAL_REPLICAS%2 == 0)) { //* Number of swaps in odd iterations
+            n_swaps[i] -= 1;
+        }
+    }
+
+    // "swap_planning" initialization
+    for(int i=0; i<N_ITERATIONS; i++) {
+        swap_planning[i] = (Swap**) malloc(n_swaps[i]*sizeof(Swap*));
+
+        int sw_cand_1 = 0; //* Defining the starting point
+        if(i%2 != 0) { sw_cand_1 = 1; }
+
+        for(int j=0; j<n_swaps[i]; j++) {
+            swap_planning[i][j] = new Swap(sw_cand_1, (sw_cand_1+1));
+            sw_cand_1 += 2;
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
 /**
  * @name MCMC_iteration
  * @remark template
