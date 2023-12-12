@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <curand.h>
 #include <curand_kernel.h>
 
@@ -136,6 +137,8 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
+    time_t begin_all = time(NULL);
+
     int NUM_BLOCKS = (TOTAL_REPLICAS)/1024; //* 1024 is the number of thread per block
     int NUM_THREADS = (TOTAL_REPLICAS)%1024;
 
@@ -179,14 +182,23 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
+    time_t begin_exec = time(NULL);
+    /*
     for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
         cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
         if(SWAP_ACTIVE) {
             cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, device_n_swaps, device_swap_planning, iteration);
         }
     }
+    */
+    time_t end_exec = time(NULL);
 
     if(DEBUG_FLOW) { printf("Device -> Run: OK\n"); }
+
+    time_t end_all = time(NULL);
+
+    double total_all = (double) (end_all-begin_all);
+    double total_exec = (double) (end_exec-begin_exec);
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
@@ -208,8 +220,8 @@ int main(int argc, char** argv) {
 
     printf("#\n"); // TIME
 
-    //printf("%f\n", total_all);
-    //printf("%f\n", total_exec);
+    printf("%f\n", total_all);
+    printf("%f\n", total_exec);
 
     printf("#\n"); // RESULTS
 
