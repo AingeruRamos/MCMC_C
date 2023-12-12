@@ -228,7 +228,6 @@ int main(int argc, char** argv) {
 
     printf("#\n");
 
-    // TODO Print Swapping
     // SWAP PLANNING (ACCEPTED)
     if(SWAP_ACTIVE) {
         cuda_print_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
