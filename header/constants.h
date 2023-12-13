@@ -44,7 +44,8 @@
     #define TEMP_STEP 1.5
 #endif
 
-#define TOTAL_REPLICAS (int) (((END_TEMP-INIT_TEMP)/TEMP_STEP)+0.5) //* 0.5 is part of a truncation trick
+#define AUX ((END_TEMP-INIT_TEMP)/TEMP_STEP)
+#define TOTAL_REPLICAS ((int) AUX + ( ((double)(int) AUX < AUX) ? 1 : 0)) //* Ceil trick
 
 // MODEL CONSTANTS
 #ifndef N_ROW

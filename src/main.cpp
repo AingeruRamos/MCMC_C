@@ -118,14 +118,7 @@ int main(int argc, char** argv) {
                     if(DEBUG_FLOW) { printf("Swap pre-calculus (%d): OK\n", swap_index); }
 
                     if(rand_gen.rand_uniform() < swap_prob) {
-                        double aux_temp = temps[swap->_swap_candidate_1];
-                        temps[swap->_swap_candidate_1] = temps[swap->_swap_candidate_2];
-                        temps[swap->_swap_candidate_2] = aux_temp;
-
-                        MODEL_RESULTS* aux_results = replicas[swap->_swap_candidate_1]._results;
-                        replicas[swap->_swap_candidate_1]._results = replicas[swap->_swap_candidate_2]._results;
-                        replicas[swap->_swap_candidate_2]._results = aux_results;
-                        swap->_accepted = true;
+                        doSwap<MODEL_NAME>(temps, replicas, swap);
                     }
                 }
 

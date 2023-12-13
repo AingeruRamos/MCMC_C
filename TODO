@@ -7,4 +7,5 @@ README > Update for the new version / Continue improving
 
 # General =====================================================================
 
+Revise all the comments
 Improve memory managment in CUDA version. Batching in results array.

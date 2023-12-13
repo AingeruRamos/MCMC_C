@@ -173,4 +173,20 @@ _DEVICE_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
     return swap_prob;
 }
 
+template <typename T>
+_DEVICE_ void doSwap(double* temps, T* replicas, Swap* sw) {
+    int replica_id1 = sw->_swap_candidate_1;
+    int replica_id2 = sw->_swap_candidate_2;
+
+    double aux_temp = temps[replica_id1];
+    temps[replica_id1] = temps[replica_id2];
+    temps[replica_id2] = aux_temp;
+
+    MODEL_RESULTS* aux_results = replicas[replica_id1]._results;;
+    replicas[replica_id1]._results = replicas[replica_id2]._results;
+    replicas[replica_id2]._results = aux_results;
+
+    sw->_accepted = true;
+}
+
 #endif
