@@ -28,7 +28,7 @@
 */
 class SpinGlassIterationResult {
     public:
-        double _energy;
+        float _energy;
         int _average_spin;
 
         /**
