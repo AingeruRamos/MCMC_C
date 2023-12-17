@@ -93,6 +93,8 @@ __global__ void cuda_print(MODEL_RESULTS* device_results, int replica_id) {
 void option_enabeler(int argc, char** argv);
 
 int DEBUG_FLOW = 0;
+int DEBUG_NO_SWAPS = 0;
+int DEBUG_NO_RESULTS = 0;
 
 int main(int argc, char** argv) {
 
@@ -103,7 +105,7 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-    time_t begin_all = time(NULL);
+    time_t begin_init = time(NULL);
 
     int NUM_BLOCKS = ((TOTAL_REPLICAS)/1024)+1; //* 1024 is the number of thread per block
     int NUM_THREADS = (TOTAL_REPLICAS)%1024;
@@ -145,6 +147,8 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Device -> Swaps: OK\n"); }
 
+    time_t end_init = time(NULL);
+
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
@@ -167,15 +171,9 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-    time_t end_all = time(NULL);
+    time_t begin_print = time(NULL);
 
-    double total_all = (double) (end_all-begin_all);
-    double total_exec = (double) (end_exec-begin_exec);
-
-//-----------------------------------------------------------------------------|
-//-----------------------------------------------------------------------------|
-
-    printf("%d*\n", TOTAL_REPLICAS); // SIMULATION CONSTANTS
+    printf("%d,%d\n", NUM_BLOCKS, NUM_THREADS); // SIMULATION CONSTANTS
     printf("%d\n", N_ITERATIONS);
     printf("%d\n", SWAP_ACTIVE);
     printf("%f,%f,%f,%d\n", INIT_TEMP, END_TEMP, TEMP_STEP, TOTAL_REPLICAS);
@@ -188,23 +186,33 @@ int main(int argc, char** argv) {
 
     printf("#\n");
 
-    if(SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
+    if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         cuda_print_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
         cudaDeviceSynchronize();
     }
 
-    printf("#\n"); // TIME
-
-    printf("%f\n", total_all);
-    printf("%f\n", total_exec);
-
     printf("#\n"); // RESULTS
 
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-            cuda_print<<<1,1>>>(device_results, replica_id);
-            cudaDeviceSynchronize();
-            printf("#\n");
+    if(!DEBUG_NO_RESULTS) {
+        for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+                cuda_print<<<1,1>>>(device_results, replica_id);
+                cudaDeviceSynchronize();
+                printf("#\n");
+        }
     }
+
+    time_t end_print = time(NULL);
+
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
+    double total_init = (double) (end_init-begin_init);
+    double total_exec = (double) (end_exec-begin_exec);
+    double total_print = (double) (end_print-begin_print);
+
+    printf("%f\n", total_init); // TIME
+    printf("%f\n", total_exec);
+    printf("%f\n", total_print);
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
@@ -229,6 +237,12 @@ void option_enabeler(int argc, char** argv) {
 
         if(strcmp(argv[i], "-df") == 0) {
             DEBUG_FLOW = 1;
+            continue;
+        } else if(strcmp(argv[i], "-nr") == 0) {
+            DEBUG_NO_RESULTS = 1;
+            continue;
+        } else if(strcmp(argv[i], "-ns") == 0) {
+            DEBUG_NO_SWAPS = 1;
             continue;
         }
     }

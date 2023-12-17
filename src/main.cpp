@@ -26,6 +26,8 @@
 void option_enabeler(int argc, char** argv);
 
 int DEBUG_FLOW = 0;
+int DEBUG_NO_SWAPS = 0;
+int DEBUG_NO_RESULTS = 0;
 int N_THREADS = 1;
 
 int main(int argc, char** argv) {
@@ -42,7 +44,7 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-    time_t begin_all = omp_get_wtime();
+    time_t begin_init = omp_get_wtime();
 
     RandGen rand_gen;
 
@@ -82,6 +84,8 @@ int main(int argc, char** argv) {
     }
 
     if(DEBUG_FLOW) { printf("Swaps: OK\n"); }
+
+    time_t end_init = omp_get_wtime();
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
@@ -132,13 +136,7 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-    time_t end_all = omp_get_wtime();
-
-    double total_all = (double) (end_all-begin_all);
-    double total_exec = (double) (end_exec-begin_exec);
-
-//-----------------------------------------------------------------------------|
-//-----------------------------------------------------------------------------|
+    time_t begin_print = omp_get_wtime();
 
     printf("%d\n", N_THREADS); // SIMULATION CONSTANTS
     printf("%d\n", N_ITERATIONS);
@@ -153,21 +151,31 @@ int main(int argc, char** argv) {
 
     printf("#\n");
 
-    if(SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
+    if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         print_swaps(n_swaps, swap_planning);
     }
 
-    printf("#\n"); // TIME
-
-    printf("%f\n", total_all);
-    printf("%f\n", total_exec);
-
     printf("#\n"); // RESULTS
 
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        print_result(&results[replica_id]);
-        printf("#\n");
+    if(!DEBUG_NO_RESULTS) {
+        for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+            print_result(&results[replica_id]);
+            printf("#\n");
+        }
     }
+
+    time_t end_print = omp_get_wtime();
+
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
+    double total_init = (double) (end_init-begin_init);
+    double total_exec = (double) (end_exec-begin_exec);
+    double total_print = (double) (end_print-begin_print);
+
+    printf("%f\n", total_init); // TIME
+    printf("%f\n", total_exec);
+    printf("%f\n", total_print);
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
@@ -190,9 +198,14 @@ int main(int argc, char** argv) {
 void option_enabeler(int argc, char** argv) {
     for(int i=1; i<argc; i++) {
 
-        char* option_string = argv[1];
         if(strcmp(argv[i], "-df") == 0) {
             DEBUG_FLOW = 1;
+            continue;
+        } else if(strcmp(argv[i], "-nr") == 0) {
+            DEBUG_NO_RESULTS = 1;
+            continue;
+        } else if(strcmp(argv[i], "-ns") == 0) {
+            DEBUG_NO_SWAPS = 1;
             continue;
         }
     }
