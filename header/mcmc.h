@@ -62,29 +62,23 @@ _DEVICE_ void print_swaps(int* n_swaps, Swap*** swap_planning) {
 //-----------------------------------------------------------------------------|
 
 template <typename T>
-_DEVICE_ void initialize_results(T* results) {
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        results[replica_id].clean();
-    }
+_DEVICE_ void init_result(T* results, int replica_id) {
+    results[replica_id].clean();
 }
 
 template <typename T, typename M>
-_DEVICE_ void initialize_replicas(T* replicas, int* rands, M* results) {
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        T* replica = &replicas[replica_id];
-        replica->_rand_gen.set_state(rands[replica_id]);
-        replica->_results = &results[replica_id];
-        replica->init();
-    }
+_DEVICE_ void init_replica(T* replicas, int* rands, M* results, int replica_id) {
+    T* replica = &replicas[replica_id];
+    replica->_rand_gen.set_state(rands[replica_id]);
+    replica->_results = &results[replica_id];
+    replica->init();
 }
 
-_DEVICE_ void initialize_temps(double* temps) {
-    for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-        temps[replica_id] = INIT_TEMP+(replica_id*TEMP_STEP);
-    }
+_DEVICE_ void init_temp(double* temps, int replica_id) {
+    temps[replica_id] = INIT_TEMP+(replica_id*TEMP_STEP);
 }
 
-_DEVICE_ void initialize_swaps(int* n_swaps, Swap*** swap_planning) {
+_DEVICE_ void init_swaps(int* n_swaps, Swap*** swap_planning) {
 
     // "n_swaps" initialization
     for(int i=0; i<N_ITERATIONS; i++) {

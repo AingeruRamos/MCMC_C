@@ -23,12 +23,53 @@
 #include "../header/rand.h"
 #include "../header/stack.h"
 
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
+void omp_init_results(MODEL_RESULTS* results) {
+    #pragma omp parallel
+    {
+        const int N_THREADS = omp_get_num_threads();
+        int tid = omp_get_thread_num();
+
+        for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
+            initialize_result<MODEL_RESULTS>(results, replica_id);
+        }
+    }
+}
+
+void omp_init_replicas(MODEL_NAME* replicas, int* rands, MODEL_RESULTS* results) {
+    #pragma omp parallel
+    {
+        const int N_THREADS = omp_get_num_threads();
+        int tid = omp_get_thread_num();
+
+        for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
+            initialize_replica<MODEL_NAME, MODEL_RESULTS>(replicas, rands, results, replica_id);
+        }
+    }
+}
+
+void omp_init_temps(double* temps) {
+    #pragma omp parallel
+    {
+        const int N_THREADS = omp_get_num_threads();
+        int tid = omp_get_thread_num();
+
+        for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
+            initialize_temp(temps, replica_id);
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------|
+//-----------------------------------------------------------------------------|
+
 void option_enabeler(int argc, char** argv);
 
 int DEBUG_FLOW = 0;
 int DEBUG_NO_SWAPS = 0;
 int DEBUG_NO_RESULTS = 0;
-int N_THREADS = 1;
 
 int main(int argc, char** argv) {
 
@@ -55,13 +96,13 @@ int main(int argc, char** argv) {
 
     MODEL_RESULTS* results;
     results = (MODEL_RESULTS*) malloc(TOTAL_REPLICAS*sizeof(MODEL_RESULTS));
-    initialize_results<MODEL_RESULTS>(results);
+    omp_init_results(results);
 
     if(DEBUG_FLOW) { printf("Results: OK\n"); }
 
     MODEL_NAME* replicas;
     replicas = (MODEL_NAME*) malloc(TOTAL_REPLICAS*sizeof(MODEL_NAME));
-    initialize_replicas<MODEL_NAME, MODEL_RESULTS>(replicas, rands, results);
+    omp_init_replicas(replicas, rands, results);
 
     free(rands);
 
@@ -69,7 +110,7 @@ int main(int argc, char** argv) {
 
     double* temps;
     temps = (double*) malloc(TOTAL_REPLICAS*sizeof(double));
-    initialize_temps(temps);
+    omp_init_temps(temps);
 
     if(DEBUG_FLOW) { printf("Temps: OK\n"); }
 
@@ -80,7 +121,7 @@ int main(int argc, char** argv) {
         n_swaps = (int*) calloc(N_ITERATIONS, sizeof(int));
         swap_planning = (Swap***) malloc(N_ITERATIONS*sizeof(Swap**));
 
-        initialize_swaps(n_swaps, swap_planning);
+        init_swaps(n_swaps, swap_planning);
     }
 
     if(DEBUG_FLOW) { printf("Swaps: OK\n"); }
@@ -96,7 +137,7 @@ int main(int argc, char** argv) {
 
     #pragma omp parallel
     {
-        N_THREADS = omp_get_num_threads();
+        const int N_THREADS = omp_get_num_threads();
 
         int tid = omp_get_thread_num();
 
@@ -138,7 +179,7 @@ int main(int argc, char** argv) {
 
     time_t begin_print = omp_get_wtime();
 
-    printf("%d\n", N_THREADS); // SIMULATION CONSTANTS
+    printf("%d\n", omp_get_num_threads()); // SIMULATION CONSTANTS
     printf("%d\n", N_ITERATIONS);
     printf("%d\n", SWAP_ACTIVE);
     printf("%f,%f,%f,%d\n", INIT_TEMP, END_TEMP, TEMP_STEP, TOTAL_REPLICAS);

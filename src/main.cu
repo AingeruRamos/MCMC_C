@@ -35,19 +35,22 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 //-----------------------------------------------------------------------------|
 
 __global__ void cuda_init_results(MODEL_RESULTS* device_results) {
-    initialize_results<MODEL_RESULTS>(device_results);
+    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
+    init_result<MODEL_RESULTS>(device_results, replica_id);
 }
 
 __global__ void cuda_init_replicas(MODEL_NAME* device_replicas, int* device_rands, MODEL_RESULTS* device_results) {
-    initialize_replicas<MODEL_NAME, MODEL_RESULTS>(device_replicas, device_rands, device_results);
+    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
+    init_replica<MODEL_NAME, MODEL_RESULTS>(device_replicas, device_rands, device_results, replica_id);
 }
 
 __global__ void cuda_init_temps(double* device_temps) {
-    initialize_temps(device_temps);
+    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
+    init_temp(device_temps, replica_id);
 }
 
 __global__ void cuda_init_swaps(int* device_n_swaps, Swap*** device_swap_planning) {
-    initialize_swaps(device_n_swaps, device_swap_planning);
+    init_swaps(device_n_swaps, device_swap_planning);
 }
 
 __global__ void cuda_run_iteration(MODEL_NAME* device_replicas, double* device_temps) {
@@ -117,13 +120,13 @@ int main(int argc, char** argv) {
 
     MODEL_RESULTS* device_results;
     _CUDA(cudaMalloc((void**)&device_results, TOTAL_REPLICAS*sizeof(MODEL_RESULTS)));
-    cuda_init_results<<<1,1>>>(device_results);
+    cuda_init_results<<<NUM_BLOCKS, NUM_THREADS>>>(device_results);
 
     if(DEBUG_FLOW) { printf("Device -> Results: OK\n"); }
 
     MODEL_NAME* device_replicas;
     _CUDA(cudaMalloc((void**)&device_replicas, TOTAL_REPLICAS*sizeof(MODEL_NAME)));
-    cuda_init_replicas<<<1,1>>>(device_replicas, device_rands, device_results);
+    cuda_init_replicas<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_rands, device_results);
 
     _CUDA(cudaFree(device_rands));
 
@@ -131,7 +134,7 @@ int main(int argc, char** argv) {
 
     double* device_temps;
     _CUDA(cudaMalloc((void**)&device_temps, TOTAL_REPLICAS*sizeof(double)));
-    cuda_init_temps<<<1,1>>>(device_temps);
+    cuda_init_temps<<<NUM_BLOCKS, NUM_THREADS>>>(device_temps);
 
     if(DEBUG_FLOW) { printf("Device -> Temps: OK\n"); }
 
@@ -157,7 +160,7 @@ int main(int argc, char** argv) {
     if(DEBUG_FLOW) { printf("Executing\n"); }
 
     for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
-        cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
+        //cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
 
         if(DEBUG_FLOW) { printf("Replicas: OK\n"); }
 
