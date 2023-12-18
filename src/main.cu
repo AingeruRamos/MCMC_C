@@ -35,17 +35,17 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 //-----------------------------------------------------------------------------|
 
 __global__ void cuda_init_results(MODEL_RESULTS* device_results) {
-    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
+    int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
     init_result<MODEL_RESULTS>(device_results, replica_id);
 }
 
 __global__ void cuda_init_replicas(MODEL_NAME* device_replicas, int* device_rands, MODEL_RESULTS* device_results) {
-    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
+    int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
     init_replica<MODEL_NAME, MODEL_RESULTS>(device_replicas, device_rands, device_results, replica_id);
 }
 
 __global__ void cuda_init_temps(double* device_temps) {
-    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
+    int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
     init_temp(device_temps, replica_id);
 }
 
@@ -54,7 +54,7 @@ __global__ void cuda_init_swaps(int* device_n_swaps, Swap*** device_swap_plannin
 }
 
 __global__ void cuda_run_iteration(MODEL_NAME* device_replicas, double* device_temps) {
-    int replica_id = threadIdx.x + blockDim.x * threadIdx.y;
+    int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
     MODEL_NAME* replica = &device_replicas[replica_id];
     double temp = device_temps[replica_id];
 
@@ -62,7 +62,7 @@ __global__ void cuda_run_iteration(MODEL_NAME* device_replicas, double* device_t
 }
 
 __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps, int* device_n_swaps, Swap*** device_swap_planning, int iteration) {
-    int swap_index=threadIdx.x + blockDim.x * threadIdx.y;
+    int swap_index = (blockIdx.x * blockDim.x) + threadIdx.x;
 
     if(swap_index < device_n_swaps[iteration-1]) {
         Swap* swap = device_swap_planning[iteration-1][swap_index];
