@@ -33,7 +33,7 @@ void omp_init_results(MODEL_RESULTS* results) {
         int tid = omp_get_thread_num();
 
         for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-            initialize_result<MODEL_RESULTS>(results, replica_id);
+            init_result<MODEL_RESULTS>(results, replica_id);
         }
     }
 }
@@ -45,7 +45,7 @@ void omp_init_replicas(MODEL_NAME* replicas, int* rands, MODEL_RESULTS* results)
         int tid = omp_get_thread_num();
 
         for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-            initialize_replica<MODEL_NAME, MODEL_RESULTS>(replicas, rands, results, replica_id);
+            init_replica<MODEL_NAME, MODEL_RESULTS>(replicas, rands, results, replica_id);
         }
     }
 }
@@ -57,7 +57,7 @@ void omp_init_temps(double* temps) {
         int tid = omp_get_thread_num();
 
         for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-            initialize_temp(temps, replica_id);
+            init_temp(temps, replica_id);
         }
     }
 }
