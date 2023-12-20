@@ -53,6 +53,16 @@ __global__ void cuda_init_swaps(int* device_n_swaps, Swap*** device_swap_plannin
     init_swaps(device_n_swaps, device_swap_planning);
 }
 
+__global__ void cuda_run_all_iterations(MODEL_NAME* device_replicas, double* device_temps) {
+    int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
+    MODEL_NAME* replica = &device_replicas[replica_id];
+    double temp = device_temps[replica_id];
+
+    for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
+        MCMC_iteration<MODEL_NAME>(replica, temp);
+    }
+}
+
 __global__ void cuda_run_iteration(MODEL_NAME* device_replicas, double* device_temps) {
     int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
     MODEL_NAME* replica = &device_replicas[replica_id];
@@ -159,14 +169,16 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Executing\n"); }
 
-    for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
-        //cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
+    if(SWAP_ACTIVE) { //TODO To slow. Search how to use sync
+        for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
+            cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
 
-        if(DEBUG_FLOW) { printf("Replicas: OK\n"); }
-
-        if(SWAP_ACTIVE) {
-            cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, device_n_swaps, device_swap_planning, iteration);
+            cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, 
+                                                        device_n_swaps, device_swap_planning, 
+                                                        iteration);
         }
+    } else {
+        cuda_run_all_iterations<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
     }
 
     time_t end_exec = time(NULL);
@@ -197,10 +209,13 @@ int main(int argc, char** argv) {
     printf("#\n"); // RESULTS
 
     if(!DEBUG_NO_RESULTS) {
+        MODEL_RESULTS* host_results;
+        host_results = (MODEL_RESULTS*) malloc(TOTAL_REPLICAS*sizeof(MODEL_RESULTS));
+        _CUDA(cudaMemcpy(host_results, device_results, TOTAL_REPLICAS*sizeof(MODEL_RESULTS), cudaMemcpyDeviceToHost));
+
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-                cuda_print<<<1,1>>>(device_results, replica_id);
-                cudaDeviceSynchronize();
-                printf("#\n");
+            print_result(&host_results[replica_id]);
+            printf("#\n");
         }
     }
 
