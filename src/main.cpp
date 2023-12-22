@@ -70,6 +70,7 @@ void option_enabeler(int argc, char** argv);
 int DEBUG_FLOW = 0;
 int DEBUG_NO_SWAPS = 0;
 int DEBUG_NO_RESULTS = 0;
+int N_THREADS = 0;
 
 int main(int argc, char** argv) {
 
@@ -137,7 +138,7 @@ int main(int argc, char** argv) {
 
     #pragma omp parallel
     {
-        const int N_THREADS = omp_get_num_threads();
+        N_THREADS = omp_get_num_threads();
 
         int tid = omp_get_thread_num();
 
@@ -179,30 +180,38 @@ int main(int argc, char** argv) {
 
     time_t begin_print = omp_get_wtime();
 
-    printf("%d\n", omp_get_num_threads()); // SIMULATION CONSTANTS
-    printf("%d\n", N_ITERATIONS);
-    printf("%d\n", SWAP_ACTIVE);
-    printf("%f,%f,%f,%d\n", INIT_TEMP, END_TEMP, TEMP_STEP, TOTAL_REPLICAS);
+    int i_print;
+    float f_print;
 
-    printf("#\n"); // MODEL CONSTANTS
+    fwrite(&(i_print=0), sizeof(int), 1, stdout); // OPENMP EXECUTED FLAG
     
-    printf("%d\n", N_ROW);
-    printf("%d\n", N_COL);
-    printf("%f\n", SPIN_PLUS_PERCENTAGE);
+    fwrite(&(i_print=N_THREADS), sizeof(int), 1, stdout); // SIMULATION CONSTANTS
+    fwrite(&(i_print=N_ITERATIONS), sizeof(int), 1, stdout);
+    fwrite(&(i_print=SWAP_ACTIVE), sizeof(int), 1, stdout);
 
-    printf("#\n");
+    fwrite(&(f_print=INIT_TEMP), sizeof(float), 1, stdout);
+    fwrite(&(f_print=END_TEMP), sizeof(float), 1, stdout);
+    fwrite(&(f_print=TEMP_STEP), sizeof(float), 1, stdout);
+    fwrite(&(i_print=TOTAL_REPLICAS), sizeof(int), 1, stdout);
+    
+    fwrite(&(i_print=N_ROW), sizeof(int), 1, stdout); // MODEL CONSTANTS
+    fwrite(&(i_print=N_COL), sizeof(int), 1, stdout);
+    fwrite(&(f_print=SPIN_PLUS_PERCENTAGE), sizeof(float), 1, stdout);
 
     if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
+        fwrite(&(i_print=1), sizeof(int), 1, stdout); //* Flag of printed swaps
         print_swaps(n_swaps, swap_planning);
+    } else {
+        fwrite(&(i_print=0), sizeof(int), 1, stdout); //* Flag of NO printed swaps
     }
 
-    printf("#\n"); // RESULTS
-
-    if(!DEBUG_NO_RESULTS) {
+    if(!DEBUG_NO_RESULTS) { // RESULTS
+        fwrite(&(i_print=1), sizeof(int), 1, stdout); //* Flag of printed results
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
             print_result(&results[replica_id]);
-            printf("#\n");
         }
+    } else {
+        fwrite(&(i_print=0), sizeof(int), 1, stdout); //* Flag of NO printed results
     }
 
     time_t end_print = omp_get_wtime();
@@ -214,9 +223,9 @@ int main(int argc, char** argv) {
     double total_exec = (double) (end_exec-begin_exec);
     double total_print = (double) (end_print-begin_print);
 
-    printf("%f\n", total_init); // TIME
-    printf("%f\n", total_exec);
-    printf("%f\n", total_print);
+    fwrite(&(f_print=total_init), sizeof(float), 1, stdout); // TIME
+    fwrite(&(f_print=total_exec), sizeof(float), 1, stdout);
+    fwrite(&(f_print=total_print), sizeof(float), 1, stdout);
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|

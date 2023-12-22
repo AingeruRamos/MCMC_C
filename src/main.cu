@@ -92,13 +92,11 @@ __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps
     }
 }
 
+/*
 __global__ void cuda_print_swaps(int* device_n_swaps, Swap*** device_swap_planning) {
     print_swaps(device_n_swaps, device_swap_planning);
 }
-
-__global__ void cuda_print(MODEL_RESULTS* device_results, int replica_id) {
-    print_result(&device_results[replica_id]);
-}
+*/
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
@@ -188,35 +186,45 @@ int main(int argc, char** argv) {
 
     time_t begin_print = time(NULL);
 
-    printf("%d,%d\n", NUM_BLOCKS, NUM_THREADS); // SIMULATION CONSTANTS
-    printf("%d\n", N_ITERATIONS);
-    printf("%d\n", SWAP_ACTIVE);
-    printf("%f,%f,%f,%d\n", INIT_TEMP, END_TEMP, TEMP_STEP, TOTAL_REPLICAS);
+    int i_print;
+    float f_print;
 
-    printf("#\n"); // MODEL CONSTANTS
-    
-    printf("%d\n", N_ROW);
-    printf("%d\n", N_COL);
-    printf("%f\n", SPIN_PLUS_PERCENTAGE);
+    fwrite(&(i_print=1), sizeof(int), 1, stdout); // CUDA EXECUTED FLAG
 
-    printf("#\n");
+    fwrite(&(i_print=NUM_BLOCKS), sizeof(int), 1, stdout); // SIMULATION CONSTANTS
+    fwrite(&(i_print=NUM_THREADS), sizeof(int), 1, stdout);
+    fwrite(&(i_print=N_ITERATIONS), sizeof(int), 1, stdout);
+    fwrite(&(i_print=SWAP_ACTIVE), sizeof(int), 1, stdout);
+
+    fwrite(&(f_print=INIT_TEMP), sizeof(float), 1, stdout);
+    fwrite(&(f_print=END_TEMP), sizeof(float), 1, stdout);
+    fwrite(&(f_print=TEMP_STEP), sizeof(float), 1, stdout);
+    fwrite(&(i_print=TOTAL_REPLICAS), sizeof(int), 1, stdout);
+
+    fwrite(&(i_print=N_ROW), sizeof(int), 1, stdout); // MODEL CONSTANTS
+    fwrite(&(i_print=N_COL), sizeof(int), 1, stdout);
+    fwrite(&(f_print=SPIN_PLUS_PERCENTAGE), sizeof(float), 1, stdout);
 
     if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
-        cuda_print_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
-        cudaDeviceSynchronize();
+        fwrite(&(i_print=1), sizeof(int), 1, stdout); //* Flag of printed swaps
+        //cuda_print_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
+        //cudaDeviceSynchronize();
+    } else {
+        fwrite(&(i_print=0), sizeof(int), 1, stdout); //* Flag of NO printed swaps
     }
 
-    printf("#\n"); // RESULTS
+    if(!DEBUG_NO_RESULTS) { // RESULTS
+        fwrite(&(i_print=1), sizeof(int), 1, stdout); //* Flag of printed results
 
-    if(!DEBUG_NO_RESULTS) {
         MODEL_RESULTS* host_results;
         host_results = (MODEL_RESULTS*) malloc(TOTAL_REPLICAS*sizeof(MODEL_RESULTS));
         _CUDA(cudaMemcpy(host_results, device_results, TOTAL_REPLICAS*sizeof(MODEL_RESULTS), cudaMemcpyDeviceToHost));
 
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
             print_result(&host_results[replica_id]);
-            printf("#\n");
         }
+    } else {
+        fwrite(&(i_print=0), sizeof(int), 1, stdout); //* Flag of NO printed results
     }
 
     time_t end_print = time(NULL);
@@ -228,9 +236,9 @@ int main(int argc, char** argv) {
     double total_exec = (double) (end_exec-begin_exec);
     double total_print = (double) (end_print-begin_print);
 
-    printf("%f\n", total_init); // TIME
-    printf("%f\n", total_exec);
-    printf("%f\n", total_print);
+    fwrite(&(f_print=total_init), sizeof(float), 1, stdout); // TIME
+    fwrite(&(f_print=total_exec), sizeof(float), 1, stdout);
+    fwrite(&(f_print=total_print), sizeof(float), 1, stdout);
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|

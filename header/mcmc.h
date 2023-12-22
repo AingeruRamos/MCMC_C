@@ -46,15 +46,18 @@ class Swap {
         }
 };
 
-_DEVICE_ void print_swaps(int* n_swaps, Swap*** swap_planning) {
+_HOST_ void print_swaps(int* n_swaps, Swap*** swap_planning) {
+    int i_print;
+
     for(int i=0; i<N_ITERATIONS; i++) {
         for(int j=0; j<n_swaps[i]; j++) {
             Swap* sw = swap_planning[i][j];
             if(sw->_accepted) {
-                printf("%d-%d,", sw->_swap_candidate_1, sw->_swap_candidate_2);
+                fwrite(&sw->_swap_candidate_1, sizeof(int), 1, stdout);
+                fwrite(&sw->_swap_candidate_2, sizeof(int), 1, stdout);
             }
         }
-        printf("\n");
+        fwrite(&(i_print=-1), sizeof(int), 1, stdout);
     }
 }
 
