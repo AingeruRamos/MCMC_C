@@ -1,9 +1,6 @@
 # Files =======================================================================
 
-main.cpp; Line 239 >TODO Improve "swap_planning" memory free
-
 main.cu; Line 170 >TODO To slow. Search how to use sync
-main.cu; Line 252 >TODO Improve "swap_planning" memory free
 
 README > Update for the new version / Continue improving
 

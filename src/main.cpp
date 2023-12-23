@@ -115,14 +115,15 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Temps: OK\n"); }
 
-    int* n_swaps;
-    Swap*** swap_planning;
+    int* swap_list_offsets;
+    Swap* swap_planning;
 
     if(SWAP_ACTIVE) {
-        n_swaps = (int*) calloc(N_ITERATIONS, sizeof(int));
-        swap_planning = (Swap***) malloc(N_ITERATIONS*sizeof(Swap**));
+        swap_list_offsets = (int*) malloc((N_ITERATIONS+1)*sizeof(int));
+        init_swap_list_offsets(swap_list_offsets);
 
-        init_swaps(n_swaps, swap_planning);
+        swap_planning = (Swap*) malloc(swap_list_offsets[N_ITERATIONS]*sizeof(Swap));
+        init_swap_planning(swap_list_offsets, swap_planning);
     }
 
     if(DEBUG_FLOW) { printf("Swaps: OK\n"); }
@@ -157,8 +158,11 @@ int main(int argc, char** argv) {
             if(SWAP_ACTIVE) {
                 #pragma omp barrier
 
-                for(int swap_index=tid; swap_index<n_swaps[iteration-1]; swap_index+=N_THREADS) {
-                    Swap* swap = swap_planning[iteration-1][swap_index];
+                int offset = swap_list_offsets[iteration-1];
+                int n_swaps = swap_list_offsets[iteration]-offset;
+
+                for(int swap_index=tid; swap_index<n_swaps; swap_index+=N_THREADS) {
+                    Swap* swap = &swap_planning[offset+swap_index];
                     double swap_prob = get_swap_prob<MODEL_NAME>(swap, replicas, temps);
 
                     if(DEBUG_FLOW) { printf("Swap pre-calculus (%d): OK\n", swap_index); }
@@ -170,6 +174,7 @@ int main(int argc, char** argv) {
 
                 #pragma omp barrier
             }
+
         }
     }
 
@@ -200,7 +205,11 @@ int main(int argc, char** argv) {
 
     if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         fwrite(&(i_print=1), sizeof(int), 1, stdout); //* Flag of printed swaps
-        print_swaps(n_swaps, swap_planning);
+        for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
+            int offset = swap_list_offsets[iteration];
+            int n_swaps = swap_list_offsets[iteration+1]-offset;
+            print_swap_list(swap_planning, offset, n_swaps);
+        }
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, stdout); //* Flag of NO printed swaps
     }
@@ -235,8 +244,8 @@ int main(int argc, char** argv) {
     free(temps);
 
     if(SWAP_ACTIVE) {
-        free(n_swaps);
-        free(swap_planning); //TODO Improve "swap_planning" memory free
+        free(swap_list_offsets);
+        free(swap_planning);
     }
 
     return 0;

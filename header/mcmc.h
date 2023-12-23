@@ -46,19 +46,17 @@ class Swap {
         }
 };
 
-_HOST_ void print_swaps(int* n_swaps, Swap*** swap_planning) {
+_HOST_ void print_swap_list(Swap* swap_planning, int offset, int n_swaps) {
     int i_print;
 
-    for(int i=0; i<N_ITERATIONS; i++) {
-        for(int j=0; j<n_swaps[i]; j++) {
-            Swap* sw = swap_planning[i][j];
-            if(sw->_accepted) {
-                fwrite(&sw->_swap_candidate_1, sizeof(int), 1, stdout);
-                fwrite(&sw->_swap_candidate_2, sizeof(int), 1, stdout);
-            }
+    for(int j=0; j<n_swaps; j++) {
+        Swap* sw = &swap_planning[offset+j];
+        if(sw->_accepted) {
+            fwrite(&sw->_swap_candidate_1, sizeof(int), 1, stdout);
+            fwrite(&sw->_swap_candidate_2, sizeof(int), 1, stdout);
         }
-        fwrite(&(i_print=-1), sizeof(int), 1, stdout);
     }
+    fwrite(&(i_print=-1), sizeof(int), 1, stdout);
 }
 
 //-----------------------------------------------------------------------------|
@@ -81,25 +79,29 @@ _DEVICE_ void init_temp(double* temps, int replica_id) {
     temps[replica_id] = INIT_TEMP+(replica_id*TEMP_STEP);
 }
 
-_DEVICE_ void init_swaps(int* n_swaps, Swap*** swap_planning) {
+_HOST_ _DEVICE_ void init_swap_list_offsets(int* swap_list_offsets) {
+    swap_list_offsets[0] = 0;
+    int aux = 3;
+    for(int i=1; i<=N_ITERATIONS; i++) {
+        swap_list_offsets[i] = aux+swap_list_offsets[i-1];
 
-    // "n_swaps" initialization
-    for(int i=0; i<N_ITERATIONS; i++) {
-        n_swaps[i] = (int) (TOTAL_REPLICAS/2);
-        if((i%2 != 0) && (TOTAL_REPLICAS%2 == 0)) { //* Number of swaps in odd iterations
-            n_swaps[i] -= 1;
-        }
+        if(aux == 3) { aux = 2; }
+        else { aux = 3; }
     }
+}
 
-    // "swap_planning" initialization
-    for(int i=0; i<N_ITERATIONS; i++) {
-        swap_planning[i] = (Swap**) malloc(n_swaps[i]*sizeof(Swap*));
-
+_HOST_ _DEVICE_ void init_swap_planning(int* swap_list_offsets, Swap* swap_planning) {
+    for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
+        
         int sw_cand_1 = 0; //* Defining the starting point
-        if(i%2 != 0) { sw_cand_1 = 1; }
+        if(swap_list_offsets[iteration] == 2) { sw_cand_1 = 1; }
 
-        for(int j=0; j<n_swaps[i]; j++) {
-            swap_planning[i][j] = new Swap(sw_cand_1, (sw_cand_1+1));
+        int offset = swap_list_offsets[iteration];
+        int n_swaps = swap_list_offsets[iteration+1]-offset;
+        for(int j=0; j<n_swaps; j++) {
+            swap_planning[offset+j]._accepted = false;
+            swap_planning[offset+j]._swap_candidate_1 = sw_cand_1;
+            swap_planning[offset+j]._swap_candidate_2 = (sw_cand_1+1);
             sw_cand_1 += 2;
         }
     }

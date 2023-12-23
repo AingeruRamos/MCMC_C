@@ -49,8 +49,8 @@ __global__ void cuda_init_temps(double* device_temps) {
     init_temp(device_temps, replica_id);
 }
 
-__global__ void cuda_init_swaps(int* device_n_swaps, Swap*** device_swap_planning) {
-    init_swaps(device_n_swaps, device_swap_planning);
+__global__ void cuda_init_swap_list_offsets(int* device_swap_list_offsets) {
+    init_swap_list_offsets(device_swap_list_offsets);
 }
 
 __global__ void cuda_run_all_iterations(MODEL_NAME* device_replicas, double* device_temps) {
@@ -146,14 +146,33 @@ int main(int argc, char** argv) {
 
     if(DEBUG_FLOW) { printf("Device -> Temps: OK\n"); }
 
-    int* device_n_swaps;
-    Swap*** device_swap_planning;
+    int* host_swap_list_offsets;
+    Swap* host_swap_planning;
+
+    int* device_swap_list_offsets;
+    Swap* device_swap_planning;
+
 
     if(SWAP_ACTIVE) {
-        _CUDA(cudaMalloc((void**)&device_n_swaps, N_ITERATIONS*sizeof(int)));
+        _CUDA(cudaMalloc((void**)&device_swap_list_offsets, (N_ITERATIONS+1)*sizeof(int)));
+        cuda_init_swap_list_offsets<<<1,1>>>(device_swap_list_offsets);
+
         _CUDA(cudaMalloc((void**)&device_swap_planning, N_ITERATIONS*sizeof(Swap**)));
 
-        cuda_init_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
+        //cuda_init_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
+    }
+    if(SWAP_ACTIVE) {
+        host_swap_list_offsets = (int*) malloc((N_ITERATIONS+1)*sizeof(int));
+        init_swap_list_offsets(host_swap_list_offsets);
+
+        host_swap_planning = (Swap*) malloc(host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap));
+        init_swap_planning(host_swap_list_offsets, host_swap_planning);
+
+        _CUDA(cudaMalloc((void**)&device_swap_list_offsets, (N_ITERATIONS+1)*sizeof(int)));
+        _CUDA(cudaMalloc((void**)&device_swap_planning, host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap)));
+
+        _CUDA(cudaMemcpy(device_swap_list_offsets, host_swap_list_offsets, (N_ITERATIONS+1)*sizeof(int), cudaMemcpyHostToDevice));        
+        _CUDA(cudaMemcpy(device_swap_planning, host_swap_planning, host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap), cudaMemcpyHostToDevice));
     }
 
     if(DEBUG_FLOW) { printf("Device -> Swaps: OK\n"); }
@@ -168,6 +187,7 @@ int main(int argc, char** argv) {
     if(DEBUG_FLOW) { printf("Executing\n"); }
 
     if(SWAP_ACTIVE) { //TODO To slow. Search how to use sync
+        /*
         for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
             cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
 
@@ -175,6 +195,8 @@ int main(int argc, char** argv) {
                                                         device_n_swaps, device_swap_planning, 
                                                         iteration);
         }
+        */
+        cuda_run_all_iterations<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
     } else {
         cuda_run_all_iterations<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
     }
@@ -207,8 +229,15 @@ int main(int argc, char** argv) {
 
     if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         fwrite(&(i_print=1), sizeof(int), 1, stdout); //* Flag of printed swaps
-        //cuda_print_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
-        //cudaDeviceSynchronize();
+        
+        _CUDA(cudaMemcpy(host_swap_list_offsets, device_swap_list_offsets, (N_ITERATIONS+1)*sizeof(int), cudaMemcpyDeviceToHost));
+        _CUDA(cudaMemcpy(host_swap_planning, device_swap_planning, (N_ITERATIONS+1)*sizeof(int), cudaMemcpyDeviceToHost));
+        
+        for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
+            int offset = host_swap_list_offsets[iteration];
+            int n_swaps = host_swap_list_offsets[iteration+1]-offset;
+            print_swap_list(host_swap_planning, offset, n_swaps);
+        }
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, stdout); //* Flag of NO printed swaps
     }
@@ -248,8 +277,8 @@ int main(int argc, char** argv) {
     _CUDA(cudaFree(device_temps));
 
     if(SWAP_ACTIVE) {
-        _CUDA(cudaFree(device_n_swaps));
-        _CUDA(cudaFree(device_swap_planning)); //TODO Improve "swap_planning" memory free
+        _CUDA(cudaFree(device_swap_list_offsets));
+        _CUDA(cudaFree(device_swap_planning));
     }
 
     return 0;
