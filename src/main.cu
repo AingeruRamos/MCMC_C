@@ -49,10 +49,6 @@ __global__ void cuda_init_temps(double* device_temps) {
     init_temp(device_temps, replica_id);
 }
 
-__global__ void cuda_init_swap_list_offsets(int* device_swap_list_offsets) {
-    init_swap_list_offsets(device_swap_list_offsets);
-}
-
 __global__ void cuda_run_all_iterations(MODEL_NAME* device_replicas, double* device_temps) {
     int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
     MODEL_NAME* replica = &device_replicas[replica_id];
@@ -92,18 +88,11 @@ __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps
     }
 }
 
-/*
-__global__ void cuda_print_swaps(int* device_n_swaps, Swap*** device_swap_planning) {
-    print_swaps(device_n_swaps, device_swap_planning);
-}
-*/
-
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
 void option_enabeler(int argc, char** argv);
 
-int DEBUG_FLOW = 0;
 int DEBUG_NO_SWAPS = 0;
 int DEBUG_NO_RESULTS = 0;
 
@@ -124,13 +113,9 @@ int main(int argc, char** argv) {
     int* device_rands;
     _CUDA(cudaMalloc((void**)&device_rands, TOTAL_REPLICAS*sizeof(int)));
 
-    if(DEBUG_FLOW) { printf("Device -> Rands: OK\n"); }
-
     MODEL_RESULTS* device_results;
     _CUDA(cudaMalloc((void**)&device_results, TOTAL_REPLICAS*sizeof(MODEL_RESULTS)));
     cuda_init_results<<<NUM_BLOCKS, NUM_THREADS>>>(device_results);
-
-    if(DEBUG_FLOW) { printf("Device -> Results: OK\n"); }
 
     MODEL_NAME* device_replicas;
     _CUDA(cudaMalloc((void**)&device_replicas, TOTAL_REPLICAS*sizeof(MODEL_NAME)));
@@ -138,13 +123,9 @@ int main(int argc, char** argv) {
 
     _CUDA(cudaFree(device_rands));
 
-    if(DEBUG_FLOW) { printf("Device -> Replicas: OK\n"); }
-
     double* device_temps;
     _CUDA(cudaMalloc((void**)&device_temps, TOTAL_REPLICAS*sizeof(double)));
     cuda_init_temps<<<NUM_BLOCKS, NUM_THREADS>>>(device_temps);
-
-    if(DEBUG_FLOW) { printf("Device -> Temps: OK\n"); }
 
     int* host_swap_list_offsets;
     Swap* host_swap_planning;
@@ -152,15 +133,6 @@ int main(int argc, char** argv) {
     int* device_swap_list_offsets;
     Swap* device_swap_planning;
 
-
-    if(SWAP_ACTIVE) {
-        _CUDA(cudaMalloc((void**)&device_swap_list_offsets, (N_ITERATIONS+1)*sizeof(int)));
-        cuda_init_swap_list_offsets<<<1,1>>>(device_swap_list_offsets);
-
-        _CUDA(cudaMalloc((void**)&device_swap_planning, N_ITERATIONS*sizeof(Swap**)));
-
-        //cuda_init_swaps<<<1,1>>>(device_n_swaps, device_swap_planning);
-    }
     if(SWAP_ACTIVE) {
         host_swap_list_offsets = (int*) malloc((N_ITERATIONS+1)*sizeof(int));
         init_swap_list_offsets(host_swap_list_offsets);
@@ -175,16 +147,12 @@ int main(int argc, char** argv) {
         _CUDA(cudaMemcpy(device_swap_planning, host_swap_planning, host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap), cudaMemcpyHostToDevice));
     }
 
-    if(DEBUG_FLOW) { printf("Device -> Swaps: OK\n"); }
-
     time_t end_init = time(NULL);
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
     time_t begin_exec = time(NULL);
-
-    if(DEBUG_FLOW) { printf("Executing\n"); }
 
     if(SWAP_ACTIVE) { //TODO To slow. Search how to use sync
         /*
@@ -290,10 +258,7 @@ int main(int argc, char** argv) {
 void option_enabeler(int argc, char** argv) {
     for(int i=1; i<argc; i++) {
 
-        if(strcmp(argv[i], "-df") == 0) {
-            DEBUG_FLOW = 1;
-            continue;
-        } else if(strcmp(argv[i], "-nr") == 0) {
+        if(strcmp(argv[i], "-nr") == 0) {
             DEBUG_NO_RESULTS = 1;
             continue;
         } else if(strcmp(argv[i], "-ns") == 0) {
