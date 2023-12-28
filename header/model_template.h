@@ -14,6 +14,8 @@
 #ifndef _MODEL_H_
 #define _MODEL_H_
 
+#include <stdio.h>
+
 #include "constants.h"
 #include "stack.h"
 
@@ -32,7 +34,7 @@ class ReplicaIterationResult {
         _HOST_ _DEVICE_ ReplicaIterationResult();
 };
 
-_DEVICE_ void print_result(Stack<ReplicaIterationResult, N_ITERATIONS>* result);
+_DEVICE_ void print_result(Stack<ReplicaIterationResult, N_ITERATIONS>* result, FILE* fp);
 
 /**
  * @class ReplicaTrial

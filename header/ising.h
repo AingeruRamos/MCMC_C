@@ -14,6 +14,8 @@
 #ifndef _MODEL_H_
 #define _MODEL_H_
 
+#include <stdio.h>
+
 #include "constants.h"
 #include "rand.h"
 #include "stack.h"
@@ -38,7 +40,7 @@ class SpinGlassIterationResult {
         _HOST_ _DEVICE_ SpinGlassIterationResult();
 };
 
-_HOST_ void print_result(Stack<SpinGlassIterationResult, N_ITERATIONS>* result);
+_HOST_ void print_result(Stack<SpinGlassIterationResult, N_ITERATIONS>* result, FILE* fp);
 
 /**
  * @class SpinGlassTrial

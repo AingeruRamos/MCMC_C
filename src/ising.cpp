@@ -28,16 +28,16 @@ _HOST_ _DEVICE_ SpinGlassIterationResult::SpinGlassIterationResult() {
 
 // SPIN_GLASS_RESULT PRINT DEF.
 
-_HOST_ void print_result(Stack<SpinGlassIterationResult, N_ITERATIONS>* results) {
+_HOST_ void print_result(Stack<SpinGlassIterationResult, N_ITERATIONS>* results, FILE* fp) {
     SpinGlassIterationResult* sp_it;
 
     for(int i=0; i<N_ITERATIONS; i++) {
         sp_it = (SpinGlassIterationResult*) results->get(i);
-        fwrite(&sp_it->_energy, sizeof(float), 1, stdout);
+        fwrite(&sp_it->_energy, sizeof(float), 1, fp);
     }
     for(int i=0; i<N_ITERATIONS; i++) {
         sp_it = (SpinGlassIterationResult*) results->get(i);
-        fwrite(&sp_it->_average_spin, sizeof(int), 1, stdout);
+        fwrite(&sp_it->_average_spin, sizeof(int), 1, fp);
     }
 }
 

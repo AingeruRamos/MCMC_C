@@ -23,6 +23,10 @@
 #include "../header/rand.h"
 #include "../header/stack.h"
 
+
+#define VALUE(X) #X
+#define STRING(X) VALUE(X)
+
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
@@ -81,6 +85,13 @@ int main(int argc, char** argv) {
         printf("ERROR: This program is not valid.\n");
         return -1;
     }
+
+    char* filename;
+    asprintf(&filename, "OMP_%s_%d_%d.out", STRING(MODEL_NAME),
+                                            TOTAL_REPLICAS,
+                                            N_ITERATIONS);
+
+    FILE* fp = fopen(filename, "wb");
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
@@ -167,39 +178,39 @@ int main(int argc, char** argv) {
     int i_print;
     float f_print;
 
-    fwrite(&(i_print=0), sizeof(int), 1, stdout); // OPENMP EXECUTED FLAG
+    fwrite(&(i_print=0), sizeof(int), 1, fp); // OPENMP EXECUTED FLAG
     
-    fwrite(&(i_print=N_THREADS), sizeof(int), 1, stdout); // SIMULATION CONSTANTS
-    fwrite(&(i_print=N_ITERATIONS), sizeof(int), 1, stdout);
-    fwrite(&(i_print=SWAP_ACTIVE), sizeof(int), 1, stdout);
+    fwrite(&(i_print=N_THREADS), sizeof(int), 1, fp); // SIMULATION CONSTANTS
+    fwrite(&(i_print=N_ITERATIONS), sizeof(int), 1, fp);
+    fwrite(&(i_print=SWAP_ACTIVE), sizeof(int), 1, fp);
 
-    fwrite(&(f_print=INIT_TEMP), sizeof(float), 1, stdout);
-    fwrite(&(f_print=END_TEMP), sizeof(float), 1, stdout);
-    fwrite(&(f_print=TEMP_STEP), sizeof(float), 1, stdout);
-    fwrite(&(i_print=TOTAL_REPLICAS), sizeof(int), 1, stdout);
+    fwrite(&(f_print=INIT_TEMP), sizeof(float), 1, fp);
+    fwrite(&(f_print=END_TEMP), sizeof(float), 1, fp);
+    fwrite(&(f_print=TEMP_STEP), sizeof(float), 1, fp);
+    fwrite(&(i_print=TOTAL_REPLICAS), sizeof(int), 1, fp);
     
-    fwrite(&(i_print=N_ROW), sizeof(int), 1, stdout); // MODEL CONSTANTS
-    fwrite(&(i_print=N_COL), sizeof(int), 1, stdout);
-    fwrite(&(f_print=SPIN_PLUS_PERCENTAGE), sizeof(float), 1, stdout);
+    fwrite(&(i_print=N_ROW), sizeof(int), 1, fp); // MODEL CONSTANTS
+    fwrite(&(i_print=N_COL), sizeof(int), 1, fp);
+    fwrite(&(f_print=SPIN_PLUS_PERCENTAGE), sizeof(float), 1, fp);
 
     if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
-        fwrite(&(i_print=1), sizeof(int), 1, stdout); //* Flag of printed swaps
+        fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed swaps
         for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
             int offset = swap_list_offsets[iteration];
             int n_swaps = swap_list_offsets[iteration+1]-offset;
-            print_swap_list(swap_planning, offset, n_swaps);
+            print_swap_list(swap_planning, offset, n_swaps, fp);
         }
     } else {
-        fwrite(&(i_print=0), sizeof(int), 1, stdout); //* Flag of NO printed swaps
+        fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed swaps
     }
 
     if(!DEBUG_NO_RESULTS) { // RESULTS
-        fwrite(&(i_print=1), sizeof(int), 1, stdout); //* Flag of printed results
+        fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed results
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-            print_result(&results[replica_id]);
+            print_result(&results[replica_id], fp);
         }
     } else {
-        fwrite(&(i_print=0), sizeof(int), 1, stdout); //* Flag of NO printed results
+        fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed results
     }
 
     time_t end_print = omp_get_wtime();
@@ -211,12 +222,14 @@ int main(int argc, char** argv) {
     double total_exec = (double) (end_exec-begin_exec);
     double total_print = (double) (end_print-begin_print);
 
-    fwrite(&(f_print=total_init), sizeof(float), 1, stdout); // TIME
-    fwrite(&(f_print=total_exec), sizeof(float), 1, stdout);
-    fwrite(&(f_print=total_print), sizeof(float), 1, stdout);
+    fwrite(&(f_print=total_init), sizeof(float), 1, fp); // TIME
+    fwrite(&(f_print=total_exec), sizeof(float), 1, fp);
+    fwrite(&(f_print=total_print), sizeof(float), 1, fp);
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
+
+    fclose(fp);
 
     free(results);
     free(replicas);

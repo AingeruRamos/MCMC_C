@@ -46,17 +46,17 @@ class Swap {
         }
 };
 
-_HOST_ void print_swap_list(Swap* swap_planning, int offset, int n_swaps) {
+_HOST_ void print_swap_list(Swap* swap_planning, int offset, int n_swaps, FILE* fp) {
     int i_print;
 
     for(int j=0; j<n_swaps; j++) {
         Swap* sw = &swap_planning[offset+j];
         if(sw->_accepted) {
-            fwrite(&sw->_swap_candidate_1, sizeof(int), 1, stdout);
-            fwrite(&sw->_swap_candidate_2, sizeof(int), 1, stdout);
+            fwrite(&sw->_swap_candidate_1, sizeof(int), 1, fp);
+            fwrite(&sw->_swap_candidate_2, sizeof(int), 1, fp);
         }
     }
-    fwrite(&(i_print=-1), sizeof(int), 1, stdout);
+    fwrite(&(i_print=-1), sizeof(int), 1, fp);
 }
 
 //-----------------------------------------------------------------------------|
