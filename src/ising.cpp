@@ -21,29 +21,29 @@
 
 // SPIN_GLASS_ITERATION_RESULT DEFS.
 
-_HOST_ _DEVICE_ SpinGlassIterationResult::SpinGlassIterationResult() {
+_HOST_ _DEVICE_ SpinGlass2DIterationResult::SpinGlass2DIterationResult() {
     _energy = 0;
     _average_spin = 0;
 }
 
 // SPIN_GLASS_RESULT PRINT DEF.
 
-_HOST_ void print_result(Stack<SpinGlassIterationResult, N_ITERATIONS>* results, FILE* fp) {
-    SpinGlassIterationResult* sp_it;
+_HOST_ void print_chain(Stack<SpinGlass2DIterationResult, N_ITERATIONS>* chain, FILE* fp) {
+    SpinGlass2DIterationResult* sp_it;
 
     for(int i=0; i<N_ITERATIONS; i++) {
-        sp_it = (SpinGlassIterationResult*) results->get(i);
+        sp_it = (SpinGlass2DIterationResult*) chain->get(i);
         fwrite(&sp_it->_energy, sizeof(float), 1, fp);
     }
     for(int i=0; i<N_ITERATIONS; i++) {
-        sp_it = (SpinGlassIterationResult*) results->get(i);
+        sp_it = (SpinGlass2DIterationResult*) chain->get(i);
         fwrite(&sp_it->_average_spin, sizeof(int), 1, fp);
     }
 }
 
 // SPIN_GLASS DEFS.
 
-_DEVICE_ void SpinGlass::init() {
+_DEVICE_ void SpinGlass2D::init() {
 
     // Convolution kernel assigment
     for(int index=0; index<9; index++) {
@@ -68,7 +68,7 @@ _DEVICE_ void SpinGlass::init() {
     _last_spin = 0;
 
     // Calculate initial iteration
-    SpinGlassIterationResult sp_it;
+    SpinGlass2DIterationResult sp_it;
 
     /// Calculate initial energy and average spin
     for(int index=0; index<(N_ROW*N_COL); index++) {
@@ -76,16 +76,16 @@ _DEVICE_ void SpinGlass::init() {
         sp_it._average_spin += (int) _sample[index];
     }
     
-    _results->push(sp_it);
+    _chain->push(sp_it);
 }
 
-_DEVICE_ void SpinGlass::trial() {
+_DEVICE_ void SpinGlass2D::trial() {
     _trial._accepted = 1;
     _trial._row_index = (int) (_rand_gen.rand_uniform()*N_ROW);
     _trial._col_index = (int) (_rand_gen.rand_uniform()*N_COL);
 }
 
-_DEVICE_ double SpinGlass::delta() {
+_DEVICE_ double SpinGlass2D::delta() {
     int index = _trial._row_index*N_ROW+_trial._col_index;
     int sum = apply_kernel(_sample, N_ROW, N_COL, index, _kernel_cross, 3); 
     int si = _sample[index];
@@ -93,15 +93,15 @@ _DEVICE_ double SpinGlass::delta() {
     return _last_delta;
 }
 
-_DEVICE_ void SpinGlass::move() {
+_DEVICE_ void SpinGlass2D::move() {
     int index = _trial._row_index*N_ROW+_trial._col_index;
     _last_spin = _sample[index];
     _sample[index] *= -1;
 }
 
-_DEVICE_ void SpinGlass::save() {
-    SpinGlassIterationResult* sp_last_it = (SpinGlassIterationResult*) _results->top();
-    SpinGlassIterationResult sp_it;
+_DEVICE_ void SpinGlass2D::save() {
+    SpinGlass2DIterationResult* sp_last_it = (SpinGlass2DIterationResult*) _chain->top();
+    SpinGlass2DIterationResult sp_it;
     sp_it._energy = sp_last_it->_energy;
     sp_it._average_spin = sp_last_it->_average_spin;
 
@@ -110,7 +110,7 @@ _DEVICE_ void SpinGlass::save() {
         sp_it._average_spin -= 2*_last_spin;
     }
 
-    _results->push(sp_it);
+    _chain->push(sp_it);
 }
 
 //

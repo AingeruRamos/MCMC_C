@@ -23,33 +23,32 @@
 #include "../header/rand.h"
 #include "../header/stack.h"
 
-
 #define VALUE(X) #X
 #define STRING(X) VALUE(X)
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-void omp_init_results(MODEL_RESULTS* results) {
+void omp_init_chains(MODEL_CHAIN* results) {
     #pragma omp parallel
     {
         const int N_THREADS = omp_get_num_threads();
         int tid = omp_get_thread_num();
 
         for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-            init_result<MODEL_RESULTS>(results, replica_id);
+            init_chain<MODEL_CHAIN>(results, replica_id);
         }
     }
 }
 
-void omp_init_replicas(MODEL_NAME* replicas, int* rands, MODEL_RESULTS* results) {
+void omp_init_replicas(MODEL_NAME* replicas, int* rands, MODEL_CHAIN* results) {
     #pragma omp parallel
     {
         const int N_THREADS = omp_get_num_threads();
         int tid = omp_get_thread_num();
 
         for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-            init_replica<MODEL_NAME, MODEL_RESULTS>(replicas, rands, results, replica_id);
+            init_replica<MODEL_NAME, MODEL_CHAIN>(replicas, rands, results, replica_id);
         }
     }
 }
@@ -103,13 +102,13 @@ int main(int argc, char** argv) {
     int* rands;
     rands = (int*) malloc(TOTAL_REPLICAS*sizeof(int));
 
-    MODEL_RESULTS* results;
-    results = (MODEL_RESULTS*) malloc(TOTAL_REPLICAS*sizeof(MODEL_RESULTS));
-    omp_init_results(results);
+    MODEL_CHAIN* chains;
+    chains = (MODEL_CHAIN*) malloc(TOTAL_REPLICAS*sizeof(MODEL_CHAIN));
+    omp_init_chains(chains);
 
     MODEL_NAME* replicas;
     replicas = (MODEL_NAME*) malloc(TOTAL_REPLICAS*sizeof(MODEL_NAME));
-    omp_init_replicas(replicas, rands, results);
+    omp_init_replicas(replicas, rands, chains);
 
     free(rands);
 
@@ -207,7 +206,7 @@ int main(int argc, char** argv) {
     if(!DEBUG_NO_RESULTS) { // RESULTS
         fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed results
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-            print_result(&results[replica_id], fp);
+            print_chain(&chains[replica_id], fp);
         }
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed results
@@ -231,7 +230,7 @@ int main(int argc, char** argv) {
 
     fclose(fp);
 
-    free(results);
+    free(chains);
     free(replicas);
     free(temps);
 

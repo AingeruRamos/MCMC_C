@@ -21,47 +21,55 @@
 #include "stack.h"
 
 /**
- * @class SpinGlassIterationResult
+ * @class SpinGlass2DIterationResult
  * @param _energy Energy of the model
  * @param _averasge_spin Average spin of the model
  * @brief
  * * Instances of this class saves the state generated 
- * * by one iteration of the MCMC
+ * * by one iteration of the MCMC. Specifically, the state generateed by
+ * * by a replica with a behaviour of a SpinGlass2D model
 */
-class SpinGlassIterationResult {
+class SpinGlass2DIterationResult {
     public:
         float _energy;
         int _average_spin;
 
         /**
-         * @name SpinGlassIterationResult
+         * @name SpinGlass2DIterationResult
          * @remark constructor
         */
-        _HOST_ _DEVICE_ SpinGlassIterationResult();
+        _HOST_ _DEVICE_ SpinGlass2DIterationResult();
 };
 
-_HOST_ void print_result(Stack<SpinGlassIterationResult, N_ITERATIONS>* result, FILE* fp);
+/**
+ * @name print_chain
+ * @param chain A chain of a Replica
+ * @param fp The file pointer where write the chain
+ * @brief
+ * * Writes the chain into a file
+*/
+_HOST_ void print_chain(Stack<SpinGlass2DIterationResult, N_ITERATIONS>* chain, FILE* fp);
 
 /**
- * @class SpinGlassTrial
+ * @class SpinGlass2DTrial
  * @param _accepted If the trial is accepted
  * @param _row_index Row index selected for the trial
  * @param _col_index Col index selected for the trial
  * @brief
  * * Instances of this class represents a trial on the MCMC
- * * algorithm. Specifucally, a trial of a SpinGlass model
+ * * algorithm. Specifically, a trial of a SpinGlass2D model
 */
-class SpinGlassTrial {
+class SpinGlass2DTrial {
     public:
         char _accepted;
         int _row_index, _col_index;
 };
 
 /**
- * @class SpinGlass
+ * @class SpinGlass2D
  * @param _rand_gen A random generator
  * @param _trial State of the trial
- * @param _results Stack of iteration results
+ * @param _chain Stack to store the generated chain
  * @param _kernel_cross Convolution kernel in cross shape
  * @param _kernel_semicross Convolution kernel in semi-cross shape (Bottom and Right)
  * @param _sample State of the SpinGlass
@@ -70,13 +78,13 @@ class SpinGlassTrial {
  * @brief
  * * Instances of this class represent a replica in
  * * the MCMC algorithm. Specifically, this replica
- * * has the behaviour of a SpinGlass
+ * * has the behaviour of a SpinGlass2D
 */
-class SpinGlass {
+class SpinGlass2D {
     public:
         RandGen _rand_gen;
-        SpinGlassTrial _trial;
-        Stack<SpinGlassIterationResult, N_ITERATIONS>* _results;
+        SpinGlass2DTrial _trial;
+        Stack<SpinGlass2DIterationResult, N_ITERATIONS>* _chain;
         
         int _kernel_cross[9];
         int _kernel_semicross[9];
@@ -156,8 +164,8 @@ _DEVICE_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int co
 _DEVICE_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
 
 
-#define MODEL_NAME SpinGlass
-#define MODEL_ITER SpinGlassIterationResult
-#define MODEL_RESULTS Stack<SpinGlassIterationResult, N_ITERATIONS>
+#define MODEL_NAME SpinGlass2D
+#define MODEL_ITER SpinGlass2DIterationResult
+#define MODEL_CHAIN Stack<SpinGlass2DIterationResult, N_ITERATIONS>
 
 #endif

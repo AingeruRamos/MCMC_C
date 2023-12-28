@@ -46,6 +46,7 @@ class Swap {
         }
 };
 
+/***/
 _HOST_ void print_swap_list(Swap* swap_planning, int offset, int n_swaps, FILE* fp) {
     int i_print;
 
@@ -63,15 +64,15 @@ _HOST_ void print_swap_list(Swap* swap_planning, int offset, int n_swaps, FILE* 
 //-----------------------------------------------------------------------------|
 
 template <typename T>
-_DEVICE_ void init_result(T* results, int replica_id) {
-    results[replica_id].clean();
+_DEVICE_ void init_chain(T* chain, int replica_id) {
+    chain[replica_id].clean();
 }
 
 template <typename T, typename M>
-_DEVICE_ void init_replica(T* replicas, int* rands, M* results, int replica_id) {
+_DEVICE_ void init_replica(T* replicas, int* rands, M* chains, int replica_id) {
     T* replica = &replicas[replica_id];
     replica->_rand_gen.set_state(rands[replica_id]);
-    replica->_results = &results[replica_id];
+    replica->_chain = &chains[replica_id];
     replica->init();
 }
 
@@ -163,8 +164,8 @@ _DEVICE_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
 
     // Get the evals
     double evals[2];
-    evals[0] = replicas[sw_cand_1]._results->top()->_energy;
-    evals[1] = replicas[sw_cand_2]._results->top()->_energy;
+    evals[0] = replicas[sw_cand_1]._chain->top()->_energy;
+    evals[1] = replicas[sw_cand_2]._chain->top()->_energy;
 
     // Calculate the swap probability
     double temp_diff = (1/temps[sw_cand_2])-(1/temps[sw_cand_1]);
@@ -184,9 +185,9 @@ _DEVICE_ void doSwap(double* temps, T* replicas, Swap* sw) {
     temps[replica_id1] = temps[replica_id2];
     temps[replica_id2] = aux_temp;
 
-    MODEL_RESULTS* aux_results = replicas[replica_id1]._results;;
-    replicas[replica_id1]._results = replicas[replica_id2]._results;
-    replicas[replica_id2]._results = aux_results;
+    MODEL_CHAIN* aux_results = replicas[replica_id1]._chain;
+    replicas[replica_id1]._chain = replicas[replica_id2]._chain;
+    replicas[replica_id2]._chain = aux_results;
 
     sw->_accepted = true;
 }
