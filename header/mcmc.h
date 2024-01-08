@@ -46,7 +46,15 @@ class Swap {
         }
 };
 
-/***/
+/**
+ * @name print_swap_list
+ * @param swap_planning List of all swaps
+ * @param offset Offset where start to write
+ * @param n_swaps Number of swaps in the list
+ * @param fp Pointer to the file where write
+ * @brief
+ * * Writes the list of accepted swaps in one iteration
+*/
 _HOST_ void print_swap_list(Swap* swap_planning, int offset, int n_swaps, FILE* fp) {
     int i_print;
 
@@ -60,14 +68,34 @@ _HOST_ void print_swap_list(Swap* swap_planning, int offset, int n_swaps, FILE* 
     fwrite(&(i_print=-1), sizeof(int), 1, fp);
 }
 
-//-----------------------------------------------------------------------------|
-//-----------------------------------------------------------------------------|
-
+/**
+ * @name init_chain
+ * @remark template
+ * @param chains List of all chains
+ * @param replica_id The replica_id of the target chain
+ * @brief
+ * * Initializes the chain of the Replica with replica_id as index
+ * @note
+ * This function is a template. T is the type of chain to use
+*/
 template <typename T>
-_DEVICE_ void init_chain(T* chain, int replica_id) {
-    chain[replica_id].clean();
+_DEVICE_ void init_chain(T* chains, int replica_id) {
+    chains[replica_id].clean();
 }
 
+/**
+ * @name init_replica
+ * @remark template
+ * @param replicas List of all Replicas
+ * @param rands List of random numbers
+ * @param chains List of all chains
+ * @param replica_id The replica_id of the target chain
+ * @brief
+ * * Initializes the Replica with replica_id as index
+ * @note
+ * This function is a template. T is the type of Replica to use.
+ * M is the type of chains to use
+*/
 template <typename T, typename M>
 _DEVICE_ void init_replica(T* replicas, int* rands, M* chains, int replica_id) {
     T* replica = &replicas[replica_id];
@@ -76,10 +104,23 @@ _DEVICE_ void init_replica(T* replicas, int* rands, M* chains, int replica_id) {
     replica->init();
 }
 
+/**
+ * @name init_temp
+ * @param temps List of all temps
+ * @param replica_id The replica_id of the target chain
+ * @brief
+ * * Initializes the temperature of the Replica with replica_id as index
+*/
 _DEVICE_ void init_temp(double* temps, int replica_id) {
     temps[replica_id] = INIT_TEMP+(replica_id*TEMP_STEP);
 }
 
+/**
+ * @name init_swap_list_offsets
+ * @param swap_list_offsets List of all offsets to swap lists
+ * @brief
+ * * Initializes the list swap_list_offsets
+*/
 _HOST_ _DEVICE_ void init_swap_list_offsets(int* swap_list_offsets) {
     swap_list_offsets[0] = 0;
     int aux = (int) (TOTAL_REPLICAS)/2;
@@ -92,6 +133,13 @@ _HOST_ _DEVICE_ void init_swap_list_offsets(int* swap_list_offsets) {
     }
 }
 
+/**
+ * @name init_swap_planning
+ * @param swap_list_offsets List of all the offsets of swaps lists
+ * @param swap_planning List of all swaps
+ * @brief
+ * * Initializes all swaps in swap_planning
+*/
 _HOST_ _DEVICE_ void init_swap_planning(int* swap_list_offsets, Swap* swap_planning) {
     for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
         
@@ -110,9 +158,6 @@ _HOST_ _DEVICE_ void init_swap_planning(int* swap_list_offsets, Swap* swap_plann
         }
     }
 }
-
-//-----------------------------------------------------------------------------|
-//-----------------------------------------------------------------------------|
 
 /**
  * @name MCMC_iteration
@@ -176,6 +221,17 @@ _DEVICE_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
     return swap_prob;
 }
 
+/**
+ * @name doSwap
+ * @remark template
+ * @param temps List of all temps
+ * @param replicas List of all Replicas
+ * @param sw Swap to be executed
+ * @brief
+ * * Executes a swap between two Replicas
+ * @note
+ * This function is a template. T is the type of Replica to use
+*/
 template <typename T>
 _DEVICE_ void doSwap(double* temps, T* replicas, Swap* sw) {
     int replica_id1 = sw->_swap_candidate_1;

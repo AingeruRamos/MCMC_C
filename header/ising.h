@@ -22,11 +22,11 @@
 
 /**
  * @class SpinGlass2DIterationResult
- * @param _energy Energy of the model
- * @param _averasge_spin Average spin of the model
+ * @param _energy Energy of the model at time t
+ * @param _averasge_spin Average spin value of the model at time t
  * @brief
  * * Instances of this class saves the state generated 
- * * by one iteration of the MCMC. Specifically, the state generateed by
+ * * by one iteration (in time t) of the MCMC. Specifically, the state generateed
  * * by a replica with a behaviour of a SpinGlass2D model
 */
 class SpinGlass2DIterationResult {
@@ -43,7 +43,7 @@ class SpinGlass2DIterationResult {
 
 /**
  * @name print_chain
- * @param chain A chain of a Replica
+ * @param chain A chain of a Replica with behaviour of SpinGlass2D
  * @param fp The file pointer where write the chain
  * @brief
  * * Writes the chain into a file
@@ -52,9 +52,9 @@ _HOST_ void print_chain(Stack<SpinGlass2DIterationResult, N_ITERATIONS>* chain, 
 
 /**
  * @class SpinGlass2DTrial
- * @param _accepted If the trial is accepted
+ * @param _accepted Flag of accepted trial
  * @param _row_index Row index selected for the trial
- * @param _col_index Col index selected for the trial
+ * @param _col_index Collumn index selected for the trial
  * @brief
  * * Instances of this class represents a trial on the MCMC
  * * algorithm. Specifically, a trial of a SpinGlass2D model
@@ -72,8 +72,8 @@ class SpinGlass2DTrial {
  * @param _chain Stack to store the generated chain
  * @param _kernel_cross Convolution kernel in cross shape
  * @param _kernel_semicross Convolution kernel in semi-cross shape (Bottom and Right)
- * @param _sample State of the SpinGlass
- * @param _last_delta The last delta calculated with 'delta()'
+ * @param _sample State of the SpinGlass model
+ * @param _last_delta The last delta calculated with 'delta() method'
  * @param _last_spin The value of the spin moved in the trial
  * @brief
  * * Instances of this class represent a replica in
@@ -132,6 +132,10 @@ class SpinGlass2D {
         _DEVICE_ void save();
 };
 
+//-----------------------------------------------------------------------------|
+//                             AUXILIARY FUNCTIONS                             |
+//-----------------------------------------------------------------------------|
+
 /**
  * @name is_index_in_matrix
  * @param mat Matrix to use
@@ -147,7 +151,7 @@ class SpinGlass2D {
 _DEVICE_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col);
 
 /**
- * @name single_convolve
+ * @name apply_kernel
  * @param mat Matrix to use
  * @param n_row Number of rows of the matrix
  * @param n_col Number of collumns of the matrix

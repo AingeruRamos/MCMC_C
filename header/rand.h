@@ -26,9 +26,10 @@
 
 /**
  * @class RandGen
- * @param _rand_state XXX
+ * @param _rand_state The actual state of the random generator
  * @brief
- * * XXX
+ * * Instances of this class are used to generate random numbers.
+ * * The class is designed to be used in OpenMP and CUDA version.
 */
 class RandGen {
     private:

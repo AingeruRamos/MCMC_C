@@ -14,7 +14,10 @@
 #ifndef _CONST_H_
 #define _CONST_H_
 
-// CUDA DECORATOR
+//-----------------------------------------------------------------------------|
+//                                CUDA DECORATOR                               |
+//-----------------------------------------------------------------------------|
+
 #ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
 #   define _DEVICE_ __device__
 #   define _HOST_ __host__
@@ -23,7 +26,10 @@
 #   define _HOST_
 #endif
 
-// SIMULATION CONSTANTS
+//-----------------------------------------------------------------------------|
+//                             SIMULATION CONSTANTS                            |
+//-----------------------------------------------------------------------------|
+
 #ifndef N_ITERATIONS
     #define N_ITERATIONS 50
 #endif
@@ -47,7 +53,10 @@
 #define AUX ((END_TEMP-INIT_TEMP)/TEMP_STEP)
 #define TOTAL_REPLICAS ((int) AUX + ( ((double)(int) AUX < AUX) ? 1 : 0)) //* Ceil trick
 
-// MODEL CONSTANTS
+//-----------------------------------------------------------------------------|
+//                                MODEL CONSTANTS                              |
+//-----------------------------------------------------------------------------|
+
 #ifndef N_ROW
     #define N_ROW 50
 #endif

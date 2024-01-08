@@ -76,6 +76,11 @@ class Stack {
             return &stack[index];
         }
 
+        /**
+         * @name clean
+         * @brief
+         * * Resets the stack
+        */
         _HOST_ _DEVICE_ void clean() {
             n_item = 0;
         }

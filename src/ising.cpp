@@ -19,14 +19,10 @@
 #include "../header/constants.h"
 #include "../header/rand.h"
 
-// SPIN_GLASS_ITERATION_RESULT DEFS.
-
 _HOST_ _DEVICE_ SpinGlass2DIterationResult::SpinGlass2DIterationResult() {
     _energy = 0;
     _average_spin = 0;
 }
-
-// SPIN_GLASS_RESULT PRINT DEF.
 
 _HOST_ void print_chain(Stack<SpinGlass2DIterationResult, N_ITERATIONS>* chain, FILE* fp) {
     SpinGlass2DIterationResult* sp_it;
@@ -40,8 +36,6 @@ _HOST_ void print_chain(Stack<SpinGlass2DIterationResult, N_ITERATIONS>* chain, 
         fwrite(&sp_it->_average_spin, sizeof(int), 1, fp);
     }
 }
-
-// SPIN_GLASS DEFS.
 
 _DEVICE_ void SpinGlass2D::init() {
 
@@ -113,7 +107,9 @@ _DEVICE_ void SpinGlass2D::save() {
     _chain->push(sp_it);
 }
 
-//
+//-----------------------------------------------------------------------------|
+//                             AUXILIARY FUNCTIONS                             |
+//-----------------------------------------------------------------------------|
 
 _DEVICE_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col) {
     if((row >= 0) && (row < n_row) && (col >= 0) && (col < n_col)) {

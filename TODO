@@ -6,5 +6,5 @@ README > Update for the new version / Continue improving
 
 # General =====================================================================
 
-Revise all the comments
+Change all headers guard. Eliminate _ symbol
 Improve memory managment in CUDA version. Batching in results array.
