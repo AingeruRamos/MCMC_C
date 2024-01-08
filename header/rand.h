@@ -11,8 +11,8 @@
 //
 // ============================================================================
 
-#ifndef _RAND_H_
-#define _RAND_H_
+#ifndef RAND_H
+#define RAND_H
 
 #include "constants.h"
 

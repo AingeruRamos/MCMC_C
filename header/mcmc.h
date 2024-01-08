@@ -11,8 +11,8 @@
 //
 // ============================================================================
 
-#ifndef _MCMC_H_
-#define _MCMC_H_
+#ifndef MCMC_H
+#define MCMC_H
 
 #include <math.h>
 #include <stdlib.h>

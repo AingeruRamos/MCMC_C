@@ -11,8 +11,8 @@
 //
 // ============================================================================
 
-#ifndef _MODEL_H_
-#define _MODEL_H_
+#ifndef MODEL_H
+#define MODEL_H
 
 #include <stdio.h>
 
