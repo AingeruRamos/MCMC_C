@@ -39,40 +39,50 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 __global__ void cuda_init_chains(MODEL_CHAIN* device_chains) {
     int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
-    init_chain<MODEL_CHAIN>(device_chains, replica_id);
+    if(replica_id < TOTAL_REPLICAS) {
+        init_chain<MODEL_CHAIN>(device_chains, replica_id);
+    }
 }
 
 __global__ void cuda_init_replicas(MODEL_NAME* device_replicas, int* device_rands, MODEL_CHAIN* device_chains) {
     int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
-    init_replica<MODEL_NAME, MODEL_CHAIN>(device_replicas, device_rands, device_chains, replica_id);
+    if(replica_id < TOTAL_REPLICAS) {
+        init_replica<MODEL_NAME, MODEL_CHAIN>(device_replicas, device_rands, device_chains, replica_id);
+    }
 }
 
 __global__ void cuda_init_temps(double* device_temps) {
     int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
-    init_temp(device_temps, replica_id);
+    if(replica_id < TOTAL_REPLICAS) {
+        init_temp(device_temps, replica_id);
+    }
 }
 
 __global__ void cuda_run_all_iterations(MODEL_NAME* device_replicas, double* device_temps) {
     int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
-    MODEL_NAME* replica = &device_replicas[replica_id];
-    double temp = device_temps[replica_id];
+    if(replica_id < TOTAL_REPLICAS) {
+        MODEL_NAME* replica = &device_replicas[replica_id];
+        double temp = device_temps[replica_id];
 
-    for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
-        MCMC_iteration<MODEL_NAME>(replica, temp);
+        for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
+            MCMC_iteration<MODEL_NAME>(replica, temp);
+        }
     }
 }
 
 __global__ void cuda_run_iteration(MODEL_NAME* device_replicas, double* device_temps) {
     int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
-    MODEL_NAME* replica = &device_replicas[replica_id];
-    double temp = device_temps[replica_id];
+    if(replica_id < TOTAL_REPLICAS) {
+        MODEL_NAME* replica = &device_replicas[replica_id];
+        double temp = device_temps[replica_id];
 
-    MCMC_iteration<MODEL_NAME>(replica, temp);
+        MCMC_iteration<MODEL_NAME>(replica, temp);
+    }
 }
 
 __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps, int* device_swap_list_offsets, Swap* device_swap_planning, int iteration) {
     int swap_index = (blockIdx.x * blockDim.x) + threadIdx.x;
-
+    
     int offset = device_swap_list_offsets[iteration-1];
     int n_swaps = device_swap_list_offsets[iteration]-offset;
 
@@ -118,8 +128,8 @@ int main(int argc, char** argv) {
 
     time_t begin_init = time(NULL);
 
-    int NUM_BLOCKS = ((TOTAL_REPLICAS)/1024)+1; //* 1024 is the number of thread per block
-    int NUM_THREADS = (TOTAL_REPLICAS)%1024;
+    int NUM_BLOCKS = (int) ((TOTAL_REPLICAS/1024)+1); //* 1024 is the number of thread per block
+    int NUM_THREADS = ceil((float) TOTAL_REPLICAS/(float) NUM_BLOCKS);
 
     int* device_rands;
     _CUDA(cudaMalloc((void**)&device_rands, TOTAL_REPLICAS*sizeof(int)));

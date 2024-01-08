@@ -15,6 +15,6 @@ main_cu:
 	priscilla exec nvcc -x cu src/main.cu $(CPP_FILES) -lcurand -o main_cu -rdc=true $(DEFINES)
 
 prueba_cu:
-	priscilla exec nvcc -x cu prueba.cu -o prueba_cu -lcurand -o prueba -rdc=true
+	priscilla exec nvcc -x cu prueba.cu -o prueba_cu -lcurand -o prueba_cu -rdc=true
 
 #######################
