@@ -29,26 +29,26 @@
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
-void omp_init_chains(MODEL_CHAIN* results) {
+void omp_init_chains(MODEL_CHAIN* chains) {
     #pragma omp parallel
     {
         const int N_THREADS = omp_get_num_threads();
         int tid = omp_get_thread_num();
 
         for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-            init_chain<MODEL_CHAIN>(results, replica_id);
+            init_chain<MODEL_CHAIN>(chains, replica_id);
         }
     }
 }
 
-void omp_init_replicas(MODEL_NAME* replicas, int* rands, MODEL_CHAIN* results) {
+void omp_init_replicas(MODEL_NAME* replicas, int* rands, MODEL_CHAIN* chains) {
     #pragma omp parallel
     {
         const int N_THREADS = omp_get_num_threads();
         int tid = omp_get_thread_num();
 
         for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-            init_replica<MODEL_NAME, MODEL_CHAIN>(replicas, rands, results, replica_id);
+            init_replica<MODEL_NAME, MODEL_CHAIN>(replicas, rands, chains, replica_id);
         }
     }
 }
@@ -71,7 +71,7 @@ void omp_init_temps(double* temps) {
 void option_enabeler(int argc, char** argv);
 
 int DEBUG_NO_SWAPS = 0;
-int DEBUG_NO_RESULTS = 0;
+int DEBUG_NO_CHAINS = 0;
 int N_THREADS = 0;
 
 int main(int argc, char** argv) {
@@ -203,13 +203,13 @@ int main(int argc, char** argv) {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed swaps
     }
 
-    if(!DEBUG_NO_RESULTS) { // RESULTS
-        fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed results
+    if(!DEBUG_NO_CHAINS) { // CHAINS
+        fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed chains
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
             print_chain(&chains[replica_id], fp);
         }
     } else {
-        fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed results
+        fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed chains
     }
 
     time_t end_print = omp_get_wtime();
@@ -248,8 +248,8 @@ int main(int argc, char** argv) {
 void option_enabeler(int argc, char** argv) {
     for(int i=1; i<argc; i++) {
 
-        if(strcmp(argv[i], "-nr") == 0) {
-            DEBUG_NO_RESULTS = 1;
+        if(strcmp(argv[i], "-nc") == 0) {
+            DEBUG_NO_CHAINS = 1;
             continue;
         } else if(strcmp(argv[i], "-ns") == 0) {
             DEBUG_NO_SWAPS = 1;
