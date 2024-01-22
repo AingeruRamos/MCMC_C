@@ -117,9 +117,10 @@ int main(int argc, char** argv) {
     }
 
     char* filename;
-    asprintf(&filename, "CUDA_%s_%d_%d.out", STRING(MODEL_NAME),
+    asprintf(&filename, "CUDA_%s_%d_%d_%d.out", STRING(MODEL_NAME),
                                             TOTAL_REPLICAS,
-                                            N_ITERATIONS);
+                                            N_ITERATIONS,
+                                            SWAP_ACTIVE);
 
     FILE* fp = fopen(filename, "wb");
 
@@ -238,6 +239,9 @@ int main(int argc, char** argv) {
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
             print_chain(&host_chains[replica_id], fp);
         }
+
+        free(host_chains);
+        
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed chains
     }

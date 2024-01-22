@@ -1,10 +1,9 @@
 # Files =======================================================================
 
-main.cu; Line 153 >TODO To slow. Search how to use sync
+main.cu; Line 179 >TODO To slow. Search how to use sync
 
 README > Update for the new version / Continue improving
 
 # General =====================================================================
 
-Change all headers guard. Eliminate _ symbol
 Improve memory managment in CUDA version. Batching in results array.

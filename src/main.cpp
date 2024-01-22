@@ -86,9 +86,10 @@ int main(int argc, char** argv) {
     }
 
     char* filename;
-    asprintf(&filename, "OMP_%s_%d_%d.out", STRING(MODEL_NAME),
+    asprintf(&filename, "OMP_%s_%d_%d_%d.out", STRING(MODEL_NAME),
                                             TOTAL_REPLICAS,
-                                            N_ITERATIONS);
+                                            N_ITERATIONS,
+                                            SWAP_ACTIVE);
 
     FILE* fp = fopen(filename, "wb");
 
