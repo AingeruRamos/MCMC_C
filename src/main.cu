@@ -135,8 +135,11 @@ int main(int argc, char** argv) {
     int* device_rands;
     _CUDA(cudaMalloc((void**)&device_rands, TOTAL_REPLICAS*sizeof(int)));
 
+    MODEL_CHAIN* host_chains;
+    _CUDA(cudaHostAlloc((void**)&host_chains, TOTAL_REPLICAS*sizeof(MODEL_CHAIN), cudaHostAllocMapped));
+
     MODEL_CHAIN* device_chains;
-    _CUDA(cudaMalloc((void**)&device_chains, TOTAL_REPLICAS*sizeof(MODEL_CHAIN)));
+    cudaHostGetDevicePointer((void**)&device_chains,  (void*)host_chains, 0);
     cuda_init_chains<<<NUM_BLOCKS, NUM_THREADS>>>(device_chains);
 
     MODEL_NAME* device_replicas;
@@ -228,7 +231,16 @@ int main(int argc, char** argv) {
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed swaps
     }
-
+    
+    if(!DEBUG_NO_CHAINS) { // CHAINS
+        fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed chains
+        for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
+            print_chain(&host_chains[replica_id], fp);
+        }
+    } else {
+        fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed chains
+    }
+    /*
     if(!DEBUG_NO_CHAINS) { // CHAINS
         fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed chains
 
@@ -245,7 +257,7 @@ int main(int argc, char** argv) {
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed chains
     }
-
+    */
     time_t end_print = time(NULL);
 
 //-----------------------------------------------------------------------------|
@@ -262,6 +274,9 @@ int main(int argc, char** argv) {
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
+    fclose(fp);
+
+    free(host_chains);
     _CUDA(cudaFree(device_chains));
     _CUDA(cudaFree(device_replicas));
     _CUDA(cudaFree(device_temps));
