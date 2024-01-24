@@ -123,15 +123,20 @@ _DEVICE_ void init_temp(double* temps, int replica_id) {
 */
 _HOST_ _DEVICE_ void init_swap_list_offsets(int* swap_list_offsets) {
     swap_list_offsets[0] = 0;
-    int aux = (int) (TOTAL_REPLICAS)/2;
 
-    for(int i=1; i<=N_ITERATIONS; i++) {
-        swap_list_offsets[i] = aux+swap_list_offsets[i-1];
-        if((i-1) % 2 != 0) {
+    for(int i=1; i<N_ITERATIONS; i++) {
+        swap_list_offsets[i] = swap_list_offsets[i-1];
+        if(i % 10 == 0) {
+            swap_list_offsets[i] += (int) (TOTAL_REPLICAS)/2;
+        }
+
+        if(i % 20 == 0) {
             swap_list_offsets[i] -= 1;
         }
     }
-}
+
+    swap_list_offsets[N_ITERATIONS] = swap_list_offsets[N_ITERATIONS-1];
+} 
 
 /**
  * @name init_swap_planning
@@ -141,20 +146,24 @@ _HOST_ _DEVICE_ void init_swap_list_offsets(int* swap_list_offsets) {
  * * Initializes all swaps in swap_planning
 */
 _HOST_ _DEVICE_ void init_swap_planning(int* swap_list_offsets, Swap* swap_planning) {
-    for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
-        
-        int sw_cand_1 = 0; //* Defining the starting point
-        if(iteration % 2 != 0) {
-            sw_cand_1 = 1;
-        }
+    int aux = 0;
 
-        int offset = swap_list_offsets[iteration];
-        int n_swaps = swap_list_offsets[iteration+1]-offset;
-        for(int j=0; j<n_swaps; j++) {
-            swap_planning[offset+j]._accepted = false;
-            swap_planning[offset+j]._swap_candidate_1 = sw_cand_1;
-            swap_planning[offset+j]._swap_candidate_2 = (sw_cand_1+1);
-            sw_cand_1 += 2;
+    for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
+        
+        int offset = swap_list_offsets[iteration-1];
+        int n_swaps = swap_list_offsets[iteration]-offset;
+
+        if(n_swaps != 0) {
+            int sw_cand_1 = aux; //* Defining the starting point
+            if(aux != 0) { aux = 0; }
+            else { aux = 1; }
+
+            for(int j=0; j<n_swaps; j++) {
+                swap_planning[offset+j]._accepted = false;
+                swap_planning[offset+j]._swap_candidate_1 = sw_cand_1;
+                swap_planning[offset+j]._swap_candidate_2 = (sw_cand_1+1);
+                sw_cand_1 += 2;
+            }
         }
     }
 }

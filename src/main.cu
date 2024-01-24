@@ -80,6 +80,18 @@ __global__ void cuda_run_iteration(MODEL_NAME* device_replicas, double* device_t
     }
 }
 
+__global__ void cuda_run_n_iterations(MODEL_NAME* device_replicas, double* device_temps, int n_iterations) {
+    int replica_id = (blockIdx.x * blockDim.x) + threadIdx.x;
+    if(replica_id < TOTAL_REPLICAS) {
+        MODEL_NAME* replica = &device_replicas[replica_id];
+        double temp = device_temps[replica_id];
+
+        for(int iteration=0; iteration<n_iterations; iteration++) {
+            MCMC_iteration<MODEL_NAME>(replica, temp);
+        }
+    }
+}
+
 __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps, int* device_swap_list_offsets, Swap* device_swap_planning, int iteration) {
     int swap_index = (blockIdx.x * blockDim.x) + threadIdx.x;
     
@@ -152,11 +164,8 @@ int main(int argc, char** argv) {
     _CUDA(cudaMalloc((void**)&device_temps, TOTAL_REPLICAS*sizeof(double)));
     cuda_init_temps<<<NUM_BLOCKS, NUM_THREADS>>>(device_temps);
 
-    int* host_swap_list_offsets;
-    Swap* host_swap_planning;
-
-    int* device_swap_list_offsets;
-    Swap* device_swap_planning;
+    int *host_swap_list_offsets, *device_swap_list_offsets;
+    Swap *host_swap_planning, *device_swap_planning;
 
     if(SWAP_ACTIVE) {
         host_swap_list_offsets = (int*) malloc((N_ITERATIONS+1)*sizeof(int));
@@ -180,12 +189,24 @@ int main(int argc, char** argv) {
     time_t begin_exec = time(NULL);
 
     if(SWAP_ACTIVE) { //TODO To slow. Search how to use sync
-        for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
-            cuda_run_iteration<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
+        int iteration=1;
+        int run_iterations=0;
+        while(iteration < N_ITERATIONS) {
+            for(int i=iteration; i<N_ITERATIONS; i++) {
+                run_iterations += 1;
+                if(host_swap_list_offsets[i] != host_swap_list_offsets[i-1]) {
+                    iteration = i;
+                    break;
+                }
+            }
 
+            cuda_run_n_iterations<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, run_iterations);
             cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, 
                                                         device_swap_list_offsets, device_swap_planning, 
                                                         iteration);
+
+            run_iterations = 0;
+            iteration += 1;
         }
     } else {
         cuda_run_all_iterations<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps);
@@ -217,11 +238,10 @@ int main(int argc, char** argv) {
     fwrite(&(i_print=N_COL), sizeof(int), 1, fp);
     fwrite(&(f_print=SPIN_PLUS_PERCENTAGE), sizeof(float), 1, fp);
 
-    if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
+    if(!DEBUG_NO_SWAPS && SWAP_ACTIVE && 0) { // SWAP PLANNING (ACCEPTED)
         fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed swaps
         
-        _CUDA(cudaMemcpy(host_swap_list_offsets, device_swap_list_offsets, (N_ITERATIONS+1)*sizeof(int), cudaMemcpyDeviceToHost));
-        _CUDA(cudaMemcpy(host_swap_planning, device_swap_planning, (N_ITERATIONS+1)*sizeof(int), cudaMemcpyDeviceToHost));
+        _CUDA(cudaMemcpy(host_swap_planning, device_swap_planning, host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap), cudaMemcpyDeviceToHost));
         
         for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
             int offset = host_swap_list_offsets[iteration];
@@ -231,7 +251,7 @@ int main(int argc, char** argv) {
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed swaps
     }
-    
+
     if(!DEBUG_NO_CHAINS) { // CHAINS
         fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed chains
         for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
@@ -240,24 +260,7 @@ int main(int argc, char** argv) {
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed chains
     }
-    /*
-    if(!DEBUG_NO_CHAINS) { // CHAINS
-        fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed chains
 
-        MODEL_CHAIN* host_chains;
-        host_chains = (MODEL_CHAIN*) malloc(TOTAL_REPLICAS*sizeof(MODEL_CHAIN));
-        _CUDA(cudaMemcpy(host_chains, device_chains, TOTAL_REPLICAS*sizeof(MODEL_CHAIN), cudaMemcpyDeviceToHost));
-
-        for(int replica_id=0; replica_id<TOTAL_REPLICAS; replica_id++) {
-            print_chain(&host_chains[replica_id], fp);
-        }
-
-        free(host_chains);
-        
-    } else {
-        fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed chains
-    }
-    */
     time_t end_print = time(NULL);
 
 //-----------------------------------------------------------------------------|
@@ -282,11 +285,11 @@ int main(int argc, char** argv) {
     _CUDA(cudaFree(device_temps));
 
     if(SWAP_ACTIVE) {
+        free(host_swap_list_offsets);
+        free(host_swap_planning);
         _CUDA(cudaFree(device_swap_list_offsets));
         _CUDA(cudaFree(device_swap_planning));
     }
-
-    return 0;
 }
 
 //-----------------------------------------------------------------------------|
