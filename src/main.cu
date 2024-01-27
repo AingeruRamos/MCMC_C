@@ -21,9 +21,6 @@
 #include "../header/ising.h"
 #include "../header/mcmc.h"
 
-#define VALUE(X) #X
-#define STRING(X) VALUE(X)
-
 #define _CUDA(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
@@ -128,13 +125,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    char* filename;
-    asprintf(&filename, "CUDA_%s_%d_%d_%d.out", STRING(MODEL_NAME),
-                                            TOTAL_REPLICAS,
-                                            N_ITERATIONS,
-                                            SWAP_ACTIVE);
-
-    FILE* fp = fopen(filename, "wb");
+    FILE* fp = fopen(argv[1], "wb");
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
@@ -201,9 +192,11 @@ int main(int argc, char** argv) {
             }
 
             cuda_run_n_iterations<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, run_iterations);
+            cudaDeviceSynchronize();
             cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, 
                                                         device_swap_list_offsets, device_swap_planning, 
                                                         iteration);
+            cudaDeviceSynchronize();
 
             run_iterations = 0;
             iteration += 1;
@@ -238,16 +231,17 @@ int main(int argc, char** argv) {
     fwrite(&(i_print=N_COL), sizeof(int), 1, fp);
     fwrite(&(f_print=SPIN_PLUS_PERCENTAGE), sizeof(float), 1, fp);
 
-    if(!DEBUG_NO_SWAPS && SWAP_ACTIVE && 0) { // SWAP PLANNING (ACCEPTED)
+    if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed swaps
-        
+        /*
         _CUDA(cudaMemcpy(host_swap_planning, device_swap_planning, host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap), cudaMemcpyDeviceToHost));
-        
+
         for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
             int offset = host_swap_list_offsets[iteration];
             int n_swaps = host_swap_list_offsets[iteration+1]-offset;
             print_swap_list(host_swap_planning, offset, n_swaps, fp);
         }
+        */
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed swaps
     }

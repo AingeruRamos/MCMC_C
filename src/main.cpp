@@ -23,9 +23,6 @@
 #include "../header/rand.h"
 #include "../header/stack.h"
 
-#define VALUE(X) #X
-#define STRING(X) VALUE(X)
-
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
 
@@ -85,13 +82,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    char* filename;
-    asprintf(&filename, "OMP_%s_%d_%d_%d.out", STRING(MODEL_NAME),
-                                            TOTAL_REPLICAS,
-                                            N_ITERATIONS,
-                                            SWAP_ACTIVE);
-
-    FILE* fp = fopen(filename, "wb");
+    FILE* fp = fopen(argv[1], "wb");
 
 //-----------------------------------------------------------------------------|
 //-----------------------------------------------------------------------------|
@@ -195,11 +186,13 @@ int main(int argc, char** argv) {
 
     if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed swaps
+        /*
         for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
             int offset = swap_list_offsets[iteration];
             int n_swaps = swap_list_offsets[iteration+1]-offset;
             print_swap_list(swap_planning, offset, n_swaps, fp);
         }
+        */
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed swaps
     }
