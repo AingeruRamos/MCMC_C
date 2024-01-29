@@ -24,6 +24,8 @@
 #   define rand_gen_t unsigned int
 #endif
 
+#include <math.h>
+
 /**
  * @class RandGen
  * @param _rand_state The actual state of the random generator
@@ -62,6 +64,15 @@ class RandGen {
          * * Calculates a random in the range of [start, end]
         */
         _DEVICE_ double rand_uniform(double start, double end);
+
+        /**
+         * @name rand_normal
+         * @overload
+         * @return A random value
+         * @brief
+         * * Calculates a random in the range of [start, end]
+        */
+        _DEVICE_ double rand_normal();
 
 };
 

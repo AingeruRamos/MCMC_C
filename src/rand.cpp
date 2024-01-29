@@ -40,3 +40,17 @@ _DEVICE_ double RandGen::rand_uniform(double start, double end) {
 
     return (end-start)*r+start;
 }
+
+_DEVICE_ double RandGen::rand_normal() {
+    double r1, r2;
+
+    #ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
+        r1 = (double)curand_uniform(&_rand_state);
+        r2 = (double)curand_uniform(&_rand_state);
+    #else
+        r1 = (double)rand_r(&_rand_state)/(double)RAND_MAX;
+        r2 = (double)rand_r(&_rand_state)/(double)RAND_MAX;
+    #endif
+
+    return sqrt(-2*log(r1)) * cos(2*M_PI*r2);
+}
