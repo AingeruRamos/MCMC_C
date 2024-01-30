@@ -38,6 +38,10 @@
     #define SWAP_ACTIVE 0
 #endif
 
+#ifndef SWAP_INTERVAL
+    #define SWAP_INTERVAL 10
+#endif
+
 #ifndef INIT_TEMP
     #define INIT_TEMP 0.1
 #endif

@@ -126,11 +126,11 @@ _HOST_ _DEVICE_ void init_swap_list_offsets(int* swap_list_offsets) {
 
     for(int i=1; i<N_ITERATIONS; i++) {
         swap_list_offsets[i] = swap_list_offsets[i-1];
-        if(i % 10 == 0) {
+        if(i % (SWAP_INTERVAL) == 0) {
             swap_list_offsets[i] += (int) (TOTAL_REPLICAS)/2;
         }
 
-        if(i % 20 == 0) {
+        if(i % (2*(SWAP_INTERVAL)) == 0) {
             swap_list_offsets[i] -= 1;
         }
     }
