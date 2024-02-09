@@ -52,6 +52,8 @@ _DEVICE_ void SpinGlass2D::init() {
     _kernel_semicross[5] = 1;
     _kernel_semicross[7] = 1;
 
+    _trial._accepted = 0;
+
     // Initialize sample
     for(int i=0; i<(N_ROW*N_COL); i++) {
         _sample[i] = (_rand_gen.rand_uniform() <= SPIN_PLUS_PERCENTAGE) ? 1 : -1;

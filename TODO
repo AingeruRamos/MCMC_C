@@ -1,9 +1,0 @@
-# Files =======================================================================
-
-main.cu; Line 179 >TODO To slow. Search how to use sync
-
-README > Update for the new version / Continue improving
-
-# General =====================================================================
-
-Improve memory managment in CUDA version. Batching in results array.
