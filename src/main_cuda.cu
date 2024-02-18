@@ -76,7 +76,7 @@ __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps
         double swap_prob = get_swap_prob<MODEL_NAME>(swap, device_replicas, device_temps);
 
         double r = device_replicas[swap->_swap_candidate_1]._rand_gen.rand_uniform();
-        if(r < swap_prob) {
+	if(r < swap_prob) {
             doSwap<MODEL_NAME>(device_temps, device_replicas, swap);
         }
     }
@@ -156,11 +156,12 @@ int main(int argc, char** argv) {
     clock_t begin_exec = clock();
     
     int iteration, run_iterations, offset, new_offset, n_swaps;
+    int NUM_BLOCKS_SWAPS, NUM_THREAD_SWAPS;
 
     iteration = 1;
 
     if(SWAP_ACTIVE) {
-	offset = host_swap_list_offsets[iteration];
+	    offset = host_swap_list_offsets[iteration];
     }
 
     while(iteration < N_ITERATIONS) {
@@ -172,7 +173,6 @@ int main(int argc, char** argv) {
         run_iterations = next_swap_iteration-iteration+1;
 
         cuda_run_n_iterations<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, run_iterations);
-        cudaDeviceSynchronize();
 
         iteration += run_iterations;
         if(iteration == N_ITERATIONS) { break; }  //* We reach the limit of iterations
@@ -180,15 +180,18 @@ int main(int argc, char** argv) {
 	    new_offset = host_swap_list_offsets[iteration-1];
 	    n_swaps = new_offset-offset;
 
+        NUM_BLOCKS_SWAPS = (int) ((n_swaps/1024)+1); //* 1024 is the number of thread per block
+        NUM_THREAD_SWAPS = ceil((float) n_swaps/(float) NUM_BLOCKS_SWAPS);
+
         // Execute the swap iteration
          //* The last for statement inc the iteration. We need to take the before iteration
-        cuda_run_swaps<<<NUM_BLOCKS, NUM_THREADS>>>(device_replicas, device_temps, 
+        cuda_run_swaps<<<NUM_BLOCKS_SWAPS, NUM_THREAD_SWAPS>>>(device_replicas, device_temps, 
 							offset, n_swaps, device_swap_planning);
-        cudaDeviceSynchronize();
 
 	offset = new_offset;
     }
-
+    cudaDeviceSynchronize();
+    
     clock_t end_exec = clock();
 
 //-----------------------------------------------------------------------------|
