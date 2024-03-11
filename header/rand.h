@@ -73,6 +73,8 @@ class RandGen {
          * * Calculates a random in the range of [start, end]
         */
         _DEVICE_ double rand_normal();
+        
+	_DEVICE_ double rand_normal(double mu, double std);
 
 };
 

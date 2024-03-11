@@ -20,11 +20,9 @@ prueba_omp:
 # NVIDIA COMPILATIONS
 
 main_cu:
-	#bnd -exec nvcc src/main_cuda.cu $(CPP_FILES) -o main_cu -lcurand -rdc=true $(COMM_FLAGS) $(DEFINES)
-	apptainer exec -B /pfs --nv /opt/ohpc/pub/containers/NGC-pytorch-23.12-py3.sif nvcc src/main_cuda.cu $(CPP_FILES) -o main_cu -lcurand -rdc=true $(COMM_FLAGS) $(DEFINES)
+	apptainer exec -B /pfs --nv /opt/ohpc/pub/containers/NGC-pytorch-23.12-py3.sif nvcc -x cu src/main_cuda.cu $(CPP_FILES) -o main_cu -lcurand -rdc=true $(COMM_FLAGS) $(DEFINES)
 
 prueba_cu:
-	#bnd -exec nvcc prueba_cuda.cu -lcurand -x cu -rdc=true $(COMM_FLAGS)
 	apptainer exec -B /pfs --nv /opt/ohpc/pub/containers/NGC-pytorch-23.12-py3.sif nvcc prueba_cuda.cu $(CPP_FILES) -o prueba_cu -lcurand -rdc=true $(COMM_FLAGS) $(DEFINES)
 
 #######################
