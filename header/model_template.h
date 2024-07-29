@@ -17,16 +17,20 @@
 #include <stdio.h>
 
 #include "constants.h"
+#include "rand.h"
 #include "stack.h"
 
 /**
  * @class ReplicaIterationResult
+ * @param _energy Energy of the model at time t
  * @brief
  * * Instances of this class saves the state generated 
  * * by one iteration (in time t) of the MCMC.
 */
 class ReplicaIterationResult {
     public:
+        float _energy;
+
         /**
          * @name ReplicaIterationResult
          * @remark constructor
@@ -41,7 +45,7 @@ class ReplicaIterationResult {
  * @brief
  * * Writes the chain into a file
 */
-_DEVICE_ void print_chain(Stack<ReplicaIterationResult, N_ITERATIONS>* result, FILE* fp);
+_HOST_ void print_chain(Stack<ReplicaIterationResult, N_ITERATIONS>* chain, FILE* fp);
 
 /**
  * @class ReplicaTrial
@@ -59,7 +63,8 @@ class ReplicaTrial {
  * @class Replica
  * @param _rand_gen A random generator
  * @param _trial State of the trial
- * @param _results Stack to store the generated chain
+ * @param _chain Stack to store the generated chain
+ * @param _last_delta The last delta calculated with 'delta() method'
  * @brief
  * * Instances of this class represent a replica in
  * * the MCMC algorithm.
@@ -67,8 +72,10 @@ class ReplicaTrial {
 class Replica {
     public:
         RandGen _rand_gen;
-        SpinGlassTrial _trial;
-        Stack<ReplicaIterationResult, N_ITERATIONS> _results;
+        ReplicaTrial _trial;
+        Stack<ReplicaIterationResult, N_ITERATIONS>* _chain;
+        
+        double _last_delta;
 
         /**
          * @name init
@@ -79,15 +86,14 @@ class Replica {
 
         /**
          * @name trial
-         * @return A trial
          * @brief
          * * Generates a trial of the replica
         */
-        _DEVICE_ void* trial();
+        _DEVICE_ void trial();
 
         /**
          * @name delta
-         * @return Value of the difference of the actual replica and 
+         * @return Value of the difference of the actual state of the replica and 
          * the replica result of applying the trial
          * @brief
          * * Calculates the effect of acceptance of the trial
@@ -97,7 +103,7 @@ class Replica {
         /**
          * @name move
          * @brief
-         * * Apply the trial to the replica
+         * * Applies the trial to the replica
         */
         _DEVICE_ void move();
 
@@ -113,8 +119,12 @@ class Replica {
 //                             AUXILIARY FUNCTIONS                             |
 //-----------------------------------------------------------------------------|
 
+
+
+//-----------------------------------------------------------------------------|
+
 #define MODEL_NAME Replica
 #define MODEL_ITER ReplicaIterationResult
-#define MODEL_RESULTS Stack<ReplicaIterationResult, N_ITERATIONS>
+#define MODEL_CHAIN Stack<ReplicaIterationResult, N_ITERATIONS>
 
 #endif

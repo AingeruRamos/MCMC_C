@@ -52,7 +52,7 @@ class RandGen {
          * @name rand_uniform
          * @return A random value
          * @brief
-         * * Calculates a random in the raqnge of [0, 1]
+         * * Calculates a random in the range of [0, 1]
         */
         _DEVICE_ double rand_uniform();
 
@@ -70,10 +70,17 @@ class RandGen {
          * @overload
          * @return A random value
          * @brief
-         * * Calculates a random in the range of [start, end]
+         * * Calculates a random in a normal N(0,1)
         */
         _DEVICE_ double rand_normal();
-        
+
+        /**
+         * @name rand_normal
+         * @overload
+         * @return A random value
+         * @brief
+         * * Calculates a random in a noraml N(mu, std)
+        */
 	_DEVICE_ double rand_normal(double mu, double std);
 
 };
