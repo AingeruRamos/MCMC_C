@@ -48,7 +48,6 @@ void init_temps(double* temps) {
 //-----------------------------------------------------------------------------|
 
 void option_enabeler(int argc, char** argv);
-double getElapsedTime(struct timeval* begin_time, struct timeval* end_time);
 
 int DEBUG_NO_SWAPS = 0;
 int DEBUG_NO_CHAINS = 0;
@@ -220,11 +219,4 @@ void option_enabeler(int argc, char** argv) {
             continue;
         }
     }
-}
-
-double getElapsedTime(struct timeval* begin_time, struct timeval* end_time) {
-    long secs = end_time->tv_sec - begin_time->tv_sec;
-    long u_secs = end_time->tv_usec - begin_time->tv_usec;
-
-    return secs + u_secs*1e-6;
 }

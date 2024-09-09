@@ -15,7 +15,7 @@
 #define CONST_H
 
 //-----------------------------------------------------------------------------|
-//                                CUDA DECORATOR                               |
+//                               CUDA DECORATOR                                |
 //-----------------------------------------------------------------------------|
 
 #ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC
@@ -27,15 +27,11 @@
 #endif
 
 //-----------------------------------------------------------------------------|
-//                             SIMULATION CONSTANTS                            |
+//                        SIMULATION CONSTANTS (USER)                          |
 //-----------------------------------------------------------------------------|
 
 #ifndef N_ITERATIONS
     #define N_ITERATIONS 50
-#endif
-
-#ifndef SWAP_ACTIVE
-    #define SWAP_ACTIVE 0
 #endif
 
 #ifndef SWAP_INTERVAL
@@ -50,15 +46,24 @@
     #define END_TEMP 4.1
 #endif
 
-#ifndef TEMP_STEP
-    #define TEMP_STEP 1.5
+#ifndef TOTAL_REPLICAS
+    #define TOTAL_REPLICAS 100
 #endif
 
-#define AUX ((END_TEMP-INIT_TEMP)/TEMP_STEP)
-#define TOTAL_REPLICAS ((int) AUX + ( ((double)(int) AUX < AUX) ? 1 : 0)) //* Ceil trick
+//-----------------------------------------------------------------------------|
+//                        SIMULATION CONSTANTS (AUTO)                          |
+//-----------------------------------------------------------------------------|
+
+#ifndef SWAP_ACTIVE
+    #define SWAP_ACTIVE (SWAP_INTERVAL > 0)
+#endif
+
+#ifndef TEMP_STEP
+    #define TEMP_STEP ((END_TEMP-INIT_TEMP)/TOTAL_REPLICAS)
+#endif
 
 //-----------------------------------------------------------------------------|
-//                                MODEL CONSTANTS                              |
+//                              MODEL CONSTANTS                                |
 //-----------------------------------------------------------------------------|
 
 #ifndef N_ROW

@@ -86,7 +86,6 @@ __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps
 //-----------------------------------------------------------------------------|
 
 void option_enabeler(int argc, char** argv);
-double getElapsedTime(struct timeval* begin_time, struct timeval* end_time);
 int getNextSwapIteration(int* swap_list_offsets, int start_iteration);
 
 int DEBUG_NO_SWAPS = 0;
