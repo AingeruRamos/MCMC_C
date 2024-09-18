@@ -58,6 +58,14 @@
     #define SWAP_ACTIVE (SWAP_INTERVAL > 0)
 #endif
 
+#ifndef N_INTERVALS
+    #if SWAP_ACTIVE
+        #define N_INTERVALS (N_ITERATIONS/SWAP_INTERVAL)
+    #else
+        #define N_INTERVALS 1
+    #endif
+#endif
+
 #ifndef TEMP_STEP
     #define TEMP_STEP ((END_TEMP-INIT_TEMP)/TOTAL_REPLICAS)
 #endif

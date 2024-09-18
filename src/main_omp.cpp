@@ -67,7 +67,7 @@ void omp_init_temps(double* temps) {
 //-----------------------------------------------------------------------------|
 
 void option_enabeler(int argc, char** argv);
-int getNextSwapIteration(int* swap_list_offsets, int start_iteration);
+int calcIntervalSize(int iteration);
 
 int DEBUG_NO_SWAPS = 0;
 int DEBUG_NO_CHAINS = 0;
@@ -110,15 +110,9 @@ int main(int argc, char** argv) {
     temps = (double*) malloc(TOTAL_REPLICAS*sizeof(double));
     omp_init_temps(temps);
 
-    int* swap_list_offsets;
-    Swap* swap_planning;
-
+    char* swap_planning;
     if(SWAP_ACTIVE) {
-        swap_list_offsets = (int*) malloc((N_ITERATIONS+1)*sizeof(int));
-        init_swap_list_offsets(swap_list_offsets);
-
-        swap_planning = (Swap*) malloc(swap_list_offsets[N_ITERATIONS]*sizeof(Swap));
-        init_swap_planning(swap_list_offsets, swap_planning);
+        swap_planning = (char*) calloc(TOTAL_REPLICAS*N_INTERVALS, sizeof(char));
     }
 
     double end_init = omp_get_wtime();
@@ -134,48 +128,41 @@ int main(int argc, char** argv) {
 
         MODEL_NAME* replica;
         double temp;
-        int tid, iteration, offset, new_offset, n_swaps;
+        int tid, iteration, interval_counter, sw_cand_index;
         
         tid = omp_get_thread_num();
         iteration = 1;
-
-        if(SWAP_ACTIVE) {
-            offset = swap_list_offsets[iteration];
-        }
+        interval_counter = 0;
 
         while(iteration < N_ITERATIONS) {
-
-            // Get the next swap iteration. If SWAP_ACTIVE == 0, returns N_ITERATIONS-1
-            int next_swap_iteration = getNextSwapIteration(swap_list_offsets, iteration);
+            int next_swap_iteration = iteration+calcIntervalSize(iteration);
 
             // Execute all iterations before the swap iteration
-	    for(; iteration <= next_swap_iteration; iteration++) {
+	        for(; (iteration <= next_swap_iteration) && (iteration < N_ITERATIONS); iteration++) {
 	    	for(int replica_id=tid; replica_id<TOTAL_REPLICAS; replica_id+=N_THREADS) {
-			
-			replica = &replicas[replica_id];
-			temp = temps[replica_id];
-			MCMC_iteration<MODEL_NAME>(replica, temp);
-		}
-	    }
+			    replica = &replicas[replica_id];
+			    temp = temps[replica_id];
+			    MCMC_iteration<MODEL_NAME>(replica, temp);
+		    }
+	        }
 
-            if(iteration == N_ITERATIONS) { break; } //* We reach the limit of iterations
+            if(iteration >= N_ITERATIONS) { break; } //* We reach the limit of iterations
 
             // Execute the swap iteration
-            new_offset = swap_list_offsets[iteration-1]; //* The last for statement inc the iteration. We need to take the before iteration
-            n_swaps = new_offset-offset;
-
             #pragma omp barrier
-            for(int swap_index=tid; swap_index<n_swaps; swap_index+=N_THREADS) {
-                Swap* swap = &swap_planning[offset+swap_index];
-                double swap_prob = get_swap_prob<MODEL_NAME>(swap, replicas, temps);
+            sw_cand_index = (interval_counter % 2 == 0);
+            sw_cand_index += 2*tid;
+
+            for(; sw_cand_index < TOTAL_REPLICAS-1; sw_cand_index += 2*N_THREADS) {
+                double swap_prob = get_swap_prob<MODEL_NAME>(sw_cand_index, sw_cand_index+1, replicas, temps);
 
                 if(rand_gen.rand_uniform() < swap_prob) {
-                    doSwap<MODEL_NAME>(temps, replicas, swap);
+                    doSwap<MODEL_NAME>(sw_cand_index, sw_cand_index+1, interval_counter, swap_planning, replicas, temps);
                 }
             }
             #pragma omp barrier
 
-            offset = new_offset;
+            interval_counter += 1;
         }
     }
 
@@ -207,10 +194,8 @@ int main(int argc, char** argv) {
 
     if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed swaps
-        for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
-            int offset = swap_list_offsets[iteration];
-            int n_swaps = swap_list_offsets[iteration+1]-offset;
-            print_swap_list(swap_planning, offset, n_swaps, fp);
+        for(int aux=0; aux < TOTAL_REPLICAS*N_INTERVALS; aux++) {
+            fwrite(&swap_planning[aux], sizeof(char), 1, fp);
         }
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed swaps
@@ -248,7 +233,6 @@ int main(int argc, char** argv) {
     free(temps);
 
     if(SWAP_ACTIVE) {
-        free(swap_list_offsets);
         free(swap_planning);
     }
 
@@ -271,14 +255,13 @@ void option_enabeler(int argc, char** argv) {
     }
 }
 
-int getNextSwapIteration(int* swap_list_offsets, int start_iteration) {
+int calcIntervalSize(int iteration) {
     if(SWAP_ACTIVE) {
-        int offset = swap_list_offsets[start_iteration];
-        for(int i=start_iteration+1; i<N_ITERATIONS; i++) {
-            if(swap_list_offsets[i] != offset) {
-                return i;
-            }
+        if(iteration > (N_ITERATIONS-SWAP_INTERVAL)) {
+            return N_ITERATIONS-iteration;
+        } else {
+            return SWAP_INTERVAL;
         }
-    } 
+    }
     return N_ITERATIONS-1;
 }

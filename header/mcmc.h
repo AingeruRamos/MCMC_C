@@ -20,55 +20,6 @@
 #include "constants.h"
 
 /**
- * @class Swap
- * @param _accepted Flag of accepted swap
- * @param _swap_candidate_1 Index of the first swap candidate
- * @param _swap_candidate_2 Index of the second swap candidate
- * @brief
- * * Instances of this class saves the planned swap between two replicas
-*/
-class Swap {
-    public:
-        bool _accepted;
-        int _swap_candidate_1;
-        int _swap_candidate_2;
-
-        /**
-         * @name Swap
-         * @remark constructor
-         * @param sw_cand_1 Index of the first swap candidate
-         * @param sw_cand_2 Index of the second swap candidate
-        */
-        _DEVICE_ Swap(int sw_cand_1, int sw_cand_2) {
-            _accepted = false;
-            _swap_candidate_1 = sw_cand_1;
-            _swap_candidate_2 = sw_cand_2;
-        }
-};
-
-/**
- * @name print_swap_list
- * @param swap_planning List of all swaps
- * @param offset Offset where start to write
- * @param n_swaps Number of swaps in the list
- * @param fp Pointer to the file where write
- * @brief
- * * Writes the list of accepted swaps in one iteration
-*/
-_HOST_ void print_swap_list(Swap* swap_planning, int offset, int n_swaps, FILE* fp) {
-    int i_print;
-
-    for(int j=0; j<n_swaps; j++) {
-        Swap* sw = &swap_planning[offset+j];
-        if(sw->_accepted) {
-            fwrite(&sw->_swap_candidate_1, sizeof(int), 1, fp);
-            fwrite(&sw->_swap_candidate_2, sizeof(int), 1, fp);
-        }
-    }
-    fwrite(&(i_print=-1), sizeof(int), 1, fp);
-}
-
-/**
  * @name init_chain
  * @remark template
  * @param chains List of all chains
@@ -116,59 +67,6 @@ _DEVICE_ void init_temp(double* temps, int replica_id) {
 }
 
 /**
- * @name init_swap_list_offsets
- * @param swap_list_offsets List of all offsets to swap lists
- * @brief
- * * Initializes the list swap_list_offsets
-*/
-_HOST_ _DEVICE_ void init_swap_list_offsets(int* swap_list_offsets) {
-    swap_list_offsets[0] = 0;
-
-    for(int i=1; i<N_ITERATIONS; i++) {
-        swap_list_offsets[i] = swap_list_offsets[i-1];
-        if(i % (SWAP_INTERVAL) == 0) {
-            swap_list_offsets[i] += (int) (TOTAL_REPLICAS)/2;
-        }
-
-        if(i % (2*(SWAP_INTERVAL)) == 0) {
-            swap_list_offsets[i] -= 1;
-        }
-    }
-
-    swap_list_offsets[N_ITERATIONS] = swap_list_offsets[N_ITERATIONS-1];
-} 
-
-/**
- * @name init_swap_planning
- * @param swap_list_offsets List of all the offsets of swaps lists
- * @param swap_planning List of all swaps
- * @brief
- * * Initializes all swaps in swap_planning
-*/
-_HOST_ _DEVICE_ void init_swap_planning(int* swap_list_offsets, Swap* swap_planning) {
-    int aux = 0;
-
-    for(int iteration=1; iteration<N_ITERATIONS; iteration++) {
-        
-        int offset = swap_list_offsets[iteration-1];
-        int n_swaps = swap_list_offsets[iteration]-offset;
-
-        if(n_swaps != 0) {
-            int sw_cand_1 = aux; //* Defining the starting point
-            if(aux != 0) { aux = 0; }
-            else { aux = 1; }
-
-            for(int j=0; j<n_swaps; j++) {
-                swap_planning[offset+j]._accepted = false;
-                swap_planning[offset+j]._swap_candidate_1 = sw_cand_1;
-                swap_planning[offset+j]._swap_candidate_2 = (sw_cand_1+1);
-                sw_cand_1 += 2;
-            }
-        }
-    }
-}
-
-/**
  * @name MCMC_iteration
  * @remark template
  * @param replica A Replica
@@ -212,9 +110,7 @@ _DEVICE_ void MCMC_iteration(T* replica, double temp) {
  * This function is a template. T is the type of replica to use
 */
 template <typename T>
-_DEVICE_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
-    int sw_cand_1 = sw->_swap_candidate_1;
-    int sw_cand_2 = sw->_swap_candidate_2;
+_DEVICE_ double get_swap_prob(int sw_cand_1, int sw_cand_2, T* replicas, double* temps) {
 
     // Get the evals
     double evals[2];
@@ -242,10 +138,7 @@ _DEVICE_ double get_swap_prob(Swap* sw, T* replicas, double* temps) {
  * This function is a template. T is the type of Replica to use
 */
 template <typename T>
-_DEVICE_ void doSwap(double* temps, T* replicas, Swap* sw) {
-    int replica_id1 = sw->_swap_candidate_1;
-    int replica_id2 = sw->_swap_candidate_2;
-
+_DEVICE_ void doSwap(int replica_id1, int replica_id2, int interval_counter, char* swap_planning, T* replicas, double* temps) {
     double aux_temp = temps[replica_id1];
     temps[replica_id1] = temps[replica_id2];
     temps[replica_id2] = aux_temp;
@@ -254,7 +147,7 @@ _DEVICE_ void doSwap(double* temps, T* replicas, Swap* sw) {
     replicas[replica_id1]._chain = replicas[replica_id2]._chain;
     replicas[replica_id2]._chain = aux_results;
 
-    sw->_accepted = true;
+    swap_planning[replica_id1*N_INTERVALS+interval_counter] = 1;
 }
 
 #endif

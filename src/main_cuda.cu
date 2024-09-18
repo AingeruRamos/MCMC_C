@@ -62,22 +62,24 @@ __global__ void cuda_run_n_iterations(MODEL_NAME* device_replicas, double* devic
         MODEL_NAME* replica = &device_replicas[replica_id];
         double temp = device_temps[replica_id];
 
-        for(int iteration=0; iteration<n_iterations; iteration++) {
+        for(int iteration=0; (iteration<n_iterations) && (iteration < N_ITERATIONS); iteration++) {
             MCMC_iteration<MODEL_NAME>(replica, temp);
         }
     }
 }
 
-__global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps, int offset, int n_swaps, Swap* device_swap_planning) {
-    int swap_index = (blockIdx.x * blockDim.x) + threadIdx.x;
+__global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps, int interval_counter, char* device_swap_planning) {
+    int sw_cand_index = (interval_counter % 2 == 0);
+    sw_cand_index += 2*((blockIdx.x * blockDim.x) + threadIdx.x);
 
-    if(swap_index < n_swaps) {
-        Swap* swap = &device_swap_planning[offset+swap_index];
-        double swap_prob = get_swap_prob<MODEL_NAME>(swap, device_replicas, device_temps);
+    if(sw_cand_index < TOTAL_REPLICAS-1) {
+        double swap_prob = get_swap_prob<MODEL_NAME>(sw_cand_index, sw_cand_index+1, 
+                                                        device_replicas, device_temps);
 
-        double r = device_replicas[swap->_swap_candidate_1]._rand_gen.rand_uniform();
-	if(r < swap_prob) {
-            doSwap<MODEL_NAME>(device_temps, device_replicas, swap);
+        double r = device_replicas[sw_cand_index]._rand_gen.rand_uniform();
+	    if(r < swap_prob) {
+            doSwap<MODEL_NAME>(sw_cand_index, sw_cand_index+1, interval_counter, 
+                                device_swap_planning, device_replicas, device_temps);
         }
     }
 }
@@ -86,7 +88,7 @@ __global__ void cuda_run_swaps(MODEL_NAME* device_replicas, double* device_temps
 //-----------------------------------------------------------------------------|
 
 void option_enabeler(int argc, char** argv);
-int getNextSwapIteration(int* swap_list_offsets, int start_iteration);
+int calcIntervalSize(int iteration);
 
 int DEBUG_NO_SWAPS = 0;
 int DEBUG_NO_CHAINS = 0;
@@ -116,11 +118,9 @@ int main(int argc, char** argv) {
     _CUDA(cudaMalloc((void**)&device_rands, TOTAL_REPLICAS*sizeof(int)));
 
     MODEL_CHAIN* host_chains;
-    //_CUDA(cudaHostAlloc((void**)&host_chains, TOTAL_REPLICAS*sizeof(MODEL_CHAIN), cudaHostAllocMapped));
     host_chains = (MODEL_CHAIN*) malloc(TOTAL_REPLICAS*sizeof(MODEL_CHAIN));
 
     MODEL_CHAIN* device_chains;
-    //cudaHostGetDevicePointer((void**)&device_chains,  (void*)host_chains, 0);
     _CUDA(cudaMalloc((void**)&device_chains, TOTAL_REPLICAS*sizeof(MODEL_CHAIN)));
     cuda_init_chains<<<NUM_BLOCKS, 32*WARPS_PER_BLOCK>>>(device_chains);
 
@@ -134,18 +134,13 @@ int main(int argc, char** argv) {
     _CUDA(cudaMalloc((void**)&device_temps, TOTAL_REPLICAS*sizeof(double)));
     cuda_init_temps<<<NUM_BLOCKS, 32*WARPS_PER_BLOCK>>>(device_temps);
 
-    int *host_swap_list_offsets;
-    Swap *host_swap_planning, *device_swap_planning;
+    char *host_swap_planning, *device_swap_planning;
 
     if(SWAP_ACTIVE) {
-        host_swap_list_offsets = (int*) malloc((N_ITERATIONS+1)*sizeof(int));
-        init_swap_list_offsets(host_swap_list_offsets);
+        host_swap_planning = (char*) calloc(TOTAL_REPLICAS*N_INTERVALS, sizeof(char));
 
-        host_swap_planning = (Swap*) malloc(host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap));
-        init_swap_planning(host_swap_list_offsets, host_swap_planning);
-
-        _CUDA(cudaMalloc((void**)&device_swap_planning, host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap)));
-        _CUDA(cudaMemcpy(device_swap_planning, host_swap_planning, host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap), cudaMemcpyHostToDevice));
+        _CUDA(cudaMalloc((void**)&device_swap_planning, TOTAL_REPLICAS*N_INTERVALS*sizeof(char)));
+        _CUDA(cudaMemcpy(device_swap_planning, host_swap_planning, TOTAL_REPLICAS*N_INTERVALS*sizeof(char), cudaMemcpyHostToDevice));
     }
 
     cudaDeviceSynchronize();
@@ -156,39 +151,28 @@ int main(int argc, char** argv) {
 
     clock_t begin_exec = clock();
     
-    int iteration, run_iterations, offset, new_offset, n_swaps;
+    int iteration, interval_counter, run_iterations;
     int NUM_BLOCKS_SWAPS;
-
+    
     iteration = 1;
-
-    if(SWAP_ACTIVE) {
-    	offset = host_swap_list_offsets[iteration];
-    }
+    interval_counter = 0;
 
     while(iteration < N_ITERATIONS) {
         
-        // Get the next swap iteration. If SWAP_ACTIVE == 0, returns N_ITERATIONS-1
-        int next_swap_iteration = getNextSwapIteration(host_swap_list_offsets, iteration);
-        
         // Execute all iterations before the swap iteration
-        run_iterations = next_swap_iteration-iteration+1;
-
+        run_iterations = calcIntervalSize(iteration);
         cuda_run_n_iterations<<<NUM_BLOCKS, 32*WARPS_PER_BLOCK>>>(device_replicas, device_temps, run_iterations);
-
         iteration += run_iterations;
-        if(iteration == N_ITERATIONS) { break; }  //* We reach the limit of iterations
 
-	    new_offset = host_swap_list_offsets[iteration-1];
-	    n_swaps = new_offset-offset;
-
-        NUM_BLOCKS_SWAPS = (int) ((n_swaps/(32*WARPS_PER_BLOCK))+1);
+        if(iteration >= N_ITERATIONS) { break; } //* We reach the limit of iterations
 
         // Execute the swap iteration
-         //* The last for statement inc the iteration. We need to take the before iteration
-        cuda_run_swaps<<<NUM_BLOCKS_SWAPS, 32*WARPS_PER_BLOCK>>>(device_replicas, device_temps, 
-							offset, n_swaps, device_swap_planning);
+        NUM_BLOCKS_SWAPS = (int) ((NUM_BLOCKS/2) + 1);
 
-	offset = new_offset;
+        // Execute the swap iteration
+        cuda_run_swaps<<<NUM_BLOCKS_SWAPS, 32*WARPS_PER_BLOCK>>>(device_replicas, device_temps, interval_counter, device_swap_planning);
+
+        interval_counter += 1;
     }
     cudaDeviceSynchronize();
     
@@ -221,12 +205,10 @@ int main(int argc, char** argv) {
 
     if(!DEBUG_NO_SWAPS && SWAP_ACTIVE) { // SWAP PLANNING (ACCEPTED)
         fwrite(&(i_print=1), sizeof(int), 1, fp); //* Flag of printed swaps
-        _CUDA(cudaMemcpy(host_swap_planning, device_swap_planning, host_swap_list_offsets[N_ITERATIONS]*sizeof(Swap), cudaMemcpyDeviceToHost));
+        _CUDA(cudaMemcpy(host_swap_planning, device_swap_planning, TOTAL_REPLICAS*N_INTERVALS*sizeof(char), cudaMemcpyDeviceToHost));
 
-        for(int iteration=0; iteration<N_ITERATIONS; iteration++) {
-            int offset = host_swap_list_offsets[iteration];
-            int n_swaps = host_swap_list_offsets[iteration+1]-offset;
-            print_swap_list(host_swap_planning, offset, n_swaps, fp);
+        for(int aux=0; aux < TOTAL_REPLICAS*N_INTERVALS; aux++) {
+            fwrite(&host_swap_planning[aux], sizeof(char), 1, fp);
         }
     } else {
         fwrite(&(i_print=0), sizeof(int), 1, fp); //* Flag of NO printed swaps
@@ -268,10 +250,10 @@ int main(int argc, char** argv) {
     _CUDA(cudaFree(device_temps));
 
     if(SWAP_ACTIVE) {
-        free(host_swap_list_offsets);
         free(host_swap_planning);
         _CUDA(cudaFree(device_swap_planning));
     }
+
 }
 
 //-----------------------------------------------------------------------------|
@@ -292,14 +274,13 @@ void option_enabeler(int argc, char** argv) {
     }
 }
 
-int getNextSwapIteration(int* swap_list_offsets, int start_iteration) {
+int calcIntervalSize(int iteration) {
     if(SWAP_ACTIVE) {
-        int offset = swap_list_offsets[start_iteration];
-        for(int i=start_iteration+1; i<N_ITERATIONS; i++) {
-            if(swap_list_offsets[i] != offset) {
-                return i;
-            }
+        if(iteration > (N_ITERATIONS-SWAP_INTERVAL)) {
+            return N_ITERATIONS-iteration;
+        } else {
+            return SWAP_INTERVAL;
         }
-    } 
+    }
     return N_ITERATIONS-1;
 }
