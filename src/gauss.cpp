@@ -1,6 +1,6 @@
 // Copyright Notice ===========================================================
 //
-// gauss.cpp, Copyright (c) 2023 Aingeru Ramos
+// gauss.cpp, Copyright (c) 2023-2024 Aingeru Ramos
 //
 // All Rights Reserved ========================================================
 //
@@ -19,6 +19,8 @@
 
 #include "../header/constants.h"
 #include "../header/rand.h"
+
+//===========================================================================//
 
 _HOST_ _DEVICE_ Gauss1DIterationResult::Gauss1DIterationResult() {
     _energy = 0;
@@ -77,9 +79,7 @@ _DEVICE_ void Gauss1D::save() {
     _chain->push(g_it);
 }
 
-//-----------------------------------------------------------------------------|
-//                             AUXILIARY FUNCTIONS                             |
-//-----------------------------------------------------------------------------|
+//===========================================================================//
 
 _DEVICE_ float dnorm(float x) {
     float p1 = 0.3989422804; // Inverse of 2*PI square root 

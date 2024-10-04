@@ -1,6 +1,6 @@
 // Copyright Notice ===========================================================
 //
-// rand.cpp, Copyright (c) 2023 Aingeru Ramos
+// rand.cpp, Copyright (c) 2023-2024 Aingeru Ramos
 //
 // All Rights Reserved ========================================================
 //
@@ -14,6 +14,8 @@
 #include "../header/rand.h"
 
 #include <stdlib.h>
+
+//===========================================================================//
 
 _DEVICE_ void RandGen::set_state(unsigned int seed) {
     #ifdef __CUDACC__ //* IF IS COMPILED WITH NVCC

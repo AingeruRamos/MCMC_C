@@ -1,6 +1,6 @@
 // Copyright Notice ===========================================================
 //
-// ising.h, Copyright (c) 2023 Aingeru Ramos
+// ising.h, Copyright (c) 2023-2024 Aingeru Ramos
 //
 // All Rights Reserved ========================================================
 //
@@ -132,9 +132,7 @@ class SpinGlass2D {
         _DEVICE_ void save();
 };
 
-//-----------------------------------------------------------------------------|
-//                             AUXILIARY FUNCTIONS                             |
-//-----------------------------------------------------------------------------|
+//===========================================================================//
 
 /**
  * @name is_index_in_matrix
@@ -167,6 +165,7 @@ _DEVICE_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int co
 */
 _DEVICE_ int apply_kernel(char* mat, int n_row, int n_col, int index, int* kernel, int kernel_size);
 
+//===========================================================================//
 
 #define MODEL_NAME SpinGlass2D
 #define MODEL_ITER SpinGlass2DIterationResult

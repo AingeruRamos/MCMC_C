@@ -1,6 +1,6 @@
 // Copyright Notice ===========================================================
 //
-// gauss.h, Copyright (c) 2023 Aingeru Ramos
+// gauss.h, Copyright (c) 2023-2024 Aingeru Ramos
 //
 // All Rights Reserved ========================================================
 //
@@ -126,9 +126,7 @@ class Gauss1D {
         _DEVICE_ void save();
 };
 
-//-----------------------------------------------------------------------------|
-//                             AUXILIARY FUNCTIONS                             |
-//-----------------------------------------------------------------------------|
+//===========================================================================//
 
 /**
  * @name is_index_in_matrix
@@ -143,6 +141,8 @@ class Gauss1D {
  * * Return 1 if index is inside the matrix, else 0
 */
 _DEVICE_ float dnorm(float x);
+
+//===========================================================================//
 
 #define MODEL_NAME Gauss1D
 #define MODEL_ITER Gauss1DIterationResult

@@ -1,6 +1,6 @@
 // Copyright Notice ===========================================================
 //
-// ising.cpp, Copyright (c) 2023 Aingeru Ramos
+// ising.cpp, Copyright (c) 2023-2024 Aingeru Ramos
 //
 // All Rights Reserved ========================================================
 //
@@ -18,6 +18,8 @@
 
 #include "../header/constants.h"
 #include "../header/rand.h"
+
+//===========================================================================//
 
 _HOST_ _DEVICE_ SpinGlass2DIterationResult::SpinGlass2DIterationResult() {
     _energy = 0;
@@ -109,9 +111,7 @@ _DEVICE_ void SpinGlass2D::save() {
     _chain->push(sp_it);
 }
 
-//-----------------------------------------------------------------------------|
-//                             AUXILIARY FUNCTIONS                             |
-//-----------------------------------------------------------------------------|
+//===========================================================================//
 
 _DEVICE_ int is_index_in_matrix(char* mat, int n_row, int n_col, int row, int col) {
     if((row >= 0) && (row < n_row) && (col >= 0) && (col < n_col)) {

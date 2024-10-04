@@ -1,6 +1,6 @@
 // Copyright Notice ===========================================================
 //
-// rand.h, Copyright (c) 2023 Aingeru Ramos
+// rand.h, Copyright (c) 2023-2024 Aingeru Ramos
 //
 // All Rights Reserved ========================================================
 //

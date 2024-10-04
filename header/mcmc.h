@@ -1,6 +1,6 @@
 // Copyright Notice ===========================================================
 //
-// mcmc.h, Copyright (c) 2023 Aingeru Ramos
+// mcmc.h, Copyright (c) 2023-2024 Aingeru Ramos
 //
 // All Rights Reserved ========================================================
 //
